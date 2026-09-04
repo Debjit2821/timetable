@@ -135,6 +135,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-xs text-secondary font-medium mb-1">
+                Default Wake-Up Time
+              </label>
+              <input
+                type="time"
+                value={formData.wakeTime}
+                onChange={e => setFormData({ ...formData, wakeTime: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-secondary font-medium mb-1">
+                Default Bedtime (Sleep Boundary)
+              </label>
+              <input
+                type="time"
+                value={formData.bedTime}
+                onChange={e => setFormData({ ...formData, bedTime: e.target.value })}
+                required
+              />
+            </div>
           </div>
 
           <div className="pt-2">

@@ -146,6 +146,23 @@ export interface DailySleepConstraint {
   wakeTimeTomorrow: string; // e.g. "07:00"
 }
 
+export interface WakeUpStep {
+  stepNumber: number;
+  timeframe: string; // e.g. "0 - 10 min"
+  title: string;
+  action: string;
+  category: 'hydration' | 'nutrition' | 'mindset' | 'focus';
+}
+
+export interface WakeUpProtocol {
+  wakeTime: string; // e.g. "13:00"
+  headline: string;
+  mindsetMessage: string;
+  immediateSteps: WakeUpStep[];
+  mealRecommendation: string;
+  projectedStudyHours: number;
+}
+
 export interface DailyPlan {
   date: string; // YYYY-MM-DD
   dayNumber: number;
@@ -162,6 +179,9 @@ export interface DailyPlan {
   recommendedBedtime?: string; // Dynamic recommended bedtime (e.g. "23:15")
   isAdaptiveActive?: boolean;
   sleepConstraint?: DailySleepConstraint;
+  dayStartTime?: string;
+  outputMode?: 'maximum' | 'balanced' | 'accelerated';
+  wakeUpProtocol?: WakeUpProtocol;
 }
 
 export interface KnowledgeSource {
@@ -215,6 +235,7 @@ export interface AdaptiveScheduleOptions {
   allowBedtimeExtension?: boolean; // allow dynamic extension if late start (respecting sleep minimums)
   userChosenBedtime?: string;      // Explicit user selected bedtime (e.g. "00:30")
   targetSleepHours?: number;        // default 7.5h
+  outputMode?: 'maximum' | 'balanced' | 'accelerated';
 }
 
 export interface AdaptiveScheduleReport {

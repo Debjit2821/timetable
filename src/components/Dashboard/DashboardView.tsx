@@ -13,7 +13,10 @@ import {
   Award,
   AlertCircle,
   Sliders,
-  ShieldCheck
+  ShieldCheck,
+  Utensils,
+  Coffee,
+  Flame
 } from 'lucide-react';
 import { DailyPlan, UserProfile, Subject, DsaProblem, AdaptiveScheduleOptions } from '../../types';
 import { NextActionWidget } from '../NextActionWidget';
@@ -21,6 +24,8 @@ import { DailyReviewModal } from './DailyReviewModal';
 import { RescheduleModal } from './RescheduleModal';
 import { CatchUpModal } from './CatchUpModal';
 import { AdaptiveScheduleModal } from './AdaptiveScheduleModal';
+import { StartDayModal } from './StartDayModal';
+import { WakeUpGuideCard } from './WakeUpGuideCard';
 import { AdaptationEngine, AdaptationReport, LapsedTaskAnalysis } from '../../services/adaptationEngine';
 import { PlannerEngine } from '../../services/plannerEngine';
 import { HealthEngine } from '../../services/healthEngine';
@@ -61,6 +66,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCatchUpModal, setShowCatchUpModal] = useState(false);
   const [showAdaptiveModal, setShowAdaptiveModal] = useState(false);
+  const [showStartDayModal, setShowStartDayModal] = useState(false);
+  const [guideDismissed, setGuideDismissed] = useState(false);
 
   // Live Clock
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -97,7 +104,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const totalBlocks = plan.timeBlocks.length;
   const dailyProgressPercent = Math.round((completedBlocks / Math.max(totalBlocks, 1)) * 100);
 
+  // Pure study minutes calculation
+  const totalPlannedStudyMinutes = plan.timeBlocks
+    .filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision')
+    .reduce((sum, b) => sum + b.durationMinutes, 0);
+
   const targetSleepTime = plan.sleepConstraint?.targetSleepTime || plan.userChosenBedtime || profile.bedTime || '23:00';
+
+  const getMealOrCategoryBadge = (block: typeof plan.timeBlocks[0]) => {
+    const titleLower = block.title.toLowerCase();
+    if (titleLower.includes('lunch')) {
+      return (
+        <span className="pill text-[10px] font-mono border-amber-500/40 text-amber-300 bg-amber-950/30 flex items-center gap-1">
+          <Utensils className="w-2.5 h-2.5" />
+          <span>Indian Lunch</span>
+        </span>
+      );
+    }
+    if (titleLower.includes('chai') || titleLower.includes('tea')) {
+      return (
+        <span className="pill text-[10px] font-mono border-amber-500/40 text-amber-200 bg-amber-950/30 flex items-center gap-1">
+          <Coffee className="w-2.5 h-2.5" />
+          <span>Evening Chai</span>
+        </span>
+      );
+    }
+    if (titleLower.includes('dinner')) {
+      return (
+        <span className="pill text-[10px] font-mono border-rose-500/40 text-rose-300 bg-rose-950/30 flex items-center gap-1">
+          <Utensils className="w-2.5 h-2.5" />
+          <span>Indian Dinner</span>
+        </span>
+      );
+    }
+    if (block.category === 'gate') {
+      return (
+        <span className="pill pill-indigo text-[10px] font-mono">
+          GATE Study
+        </span>
+      );
+    }
+    if (block.category === 'dsa') {
+      return (
+        <span className="pill text-[10px] font-mono border-emerald-500/30 text-emerald-400 bg-emerald-950/30">
+          DSA Practice
+        </span>
+      );
+    }
+    if (block.category === 'revision') {
+      return (
+        <span className="pill text-[10px] font-mono border-purple-500/30 text-purple-300 bg-purple-950/30">
+          Spaced Revision
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -112,16 +174,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </h1>
         </div>
 
-        {/* Minimal Stats Row & Adapt Action */}
-        <div className="flex items-center gap-4 text-xs text-secondary">
+        {/* Action Controls & Top Stats */}
+        <div className="flex items-center gap-2.5 sm:gap-4 text-xs text-secondary flex-wrap">
+          {/* Prominent Start Day / Wake Time Button */}
+          <button
+            onClick={() => setShowStartDayModal(true)}
+            className="btn-primary text-xs px-3 py-1.5 text-white bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/30 flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+            title="Set when you woke up or started study today to maximize output"
+          >
+            <Sun className="w-3.5 h-3.5 text-amber-300" />
+            <span>Start Day / Wake Time</span>
+          </button>
+
           <button
             onClick={() => setShowAdaptiveModal(true)}
-            className="btn-ghost text-xs px-2.5 py-1 text-accent border border-indigo-500/20 hover:bg-indigo-500/10 flex items-center gap-1.5"
-            title="Adjust actual start time or available hours today"
+            className="btn-ghost text-xs px-2.5 py-1 text-secondary border border-subtle hover:text-primary flex items-center gap-1.5"
+            title="Adjust timeline or sleep constraints"
           >
             <Sliders className="w-3 h-3" />
-            <span>Adapt Timeline & Sleep</span>
+            <span>Timeline</span>
           </button>
+
+          <div className="hidden sm:block">
+            <span className="text-tertiary">Study: </span>
+            <span className="text-accent font-semibold">{formatMinutesToHours(totalPlannedStudyMinutes)}</span>
+          </div>
 
           <div>
             <span className="text-tertiary">GATE 2027: </span>
@@ -134,28 +211,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* Immediate Wake-Up Action Guide Card (Appears whenever wakeUpProtocol is active) */}
+      {plan.wakeUpProtocol && !guideDismissed && (
+        <WakeUpGuideCard
+          protocol={plan.wakeUpProtocol}
+          onDismiss={() => setGuideDismissed(true)}
+        />
+      )}
+
       {/* Adaptive Schedule Shift Alert if actual time has diverged */}
       {lapsedAnalysis.hasLapsedTasks && (
         <div className="p-3.5 rounded-md bg-subtle border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5 text-secondary">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
             <span>
-              <strong className="text-primary">Actual day shifted from planned schedule</strong> ({lapsedAnalysis.lapsedBlocks.length} earlier tasks). Adapt the remaining day to maximize output.
+              <strong className="text-primary">Actual day shifted from planned schedule</strong> ({lapsedAnalysis.lapsedBlocks.length} earlier tasks). Re-align the remaining day for maximum output.
             </span>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-center">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
             <button
-              onClick={() => onApplyAdaptiveSchedule({ startTime: currentTimeString })}
-              className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap"
+              onClick={() => setShowStartDayModal(true)}
+              className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap flex items-center gap-1.5"
             >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Adapt to Current Time</span>
+              <Sun className="w-3.5 h-3.5 text-amber-300" />
+              <span>Set When You Woke Up</span>
             </button>
             <button
-              onClick={() => setShowAdaptiveModal(true)}
+              onClick={() => onApplyAdaptiveSchedule({ startTime: currentTimeString })}
               className="btn-secondary text-xs px-2.5 py-1.5 whitespace-nowrap"
             >
-              Customize
+              <Zap className="w-3 h-3" />
+              <span>Adapt Now</span>
             </button>
           </div>
         </div>
@@ -178,7 +264,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Daily Schedule
             </h2>
             <span className="text-xs text-tertiary font-mono">
-              ({completedBlocks}/{totalBlocks} completed)
+              ({completedBlocks}/{totalBlocks} completed · {formatMinutesToHours(totalPlannedStudyMinutes)} high-yield study)
             </span>
           </div>
 
@@ -189,10 +275,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             <button
-              onClick={() => setShowAdaptiveModal(true)}
-              className="text-xs text-secondary hover:text-primary font-medium flex items-center gap-1"
+              onClick={() => setShowStartDayModal(true)}
+              className="text-xs text-accent hover:underline font-medium flex items-center gap-1"
             >
-              <span>Adapt Timeline</span>
+              <Sun className="w-3 h-3 text-amber-400" />
+              <span>Adjust Start / Wake Time</span>
             </button>
           </div>
         </div>
@@ -210,20 +297,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {plan.timeBlocks.map(block => {
             const isCurrent = currentTimeString >= block.startTime && currentTimeString <= block.endTime;
             const cleanSub = PlannerEngine.cleanSubtitle(block.subtitle);
+            const badge = getMealOrCategoryBadge(block);
 
             return (
               <div
                 key={block.id}
                 onClick={() => onToggleTimeBlock(block.id)}
                 className={`p-3.5 flex items-start justify-between gap-3.5 transition-colors cursor-pointer ${
-                  isCurrent ? 'bg-white/[0.04]' : 'hover:bg-white/[0.02]'
+                  isCurrent ? 'bg-indigo-950/30 ring-1 ring-inset ring-indigo-500/20' : 'hover:bg-white/[0.02]'
                 } ${block.isCompleted ? 'opacity-50' : ''}`}
               >
                 <div className="flex items-start gap-3">
                   {/* Circle Checkbox */}
                   <button 
                     type="button"
-                    className={`check-circle mt-0.5 ${block.isCompleted ? 'checked' : ''}`}
+                    className={`check-circle mt-0.5 shrink-0 ${block.isCompleted ? 'checked' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleTimeBlock(block.id);
@@ -242,7 +330,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           Now
                         </span>
                       )}
-                      {block.isAdjusted && (
+                      {badge}
+                      {block.isAdjusted && !badge && (
                         <span className="pill text-[9px] font-mono">
                           Adjusted
                         </span>
@@ -367,7 +456,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className={`check-circle ${plan.healthHabits.morningKickoffHydration ? 'checked' : ''}`}>
                   {plan.healthHabits.morningKickoffHydration && <Check className="w-3 h-3" />}
                 </div>
-                <span>Morning 500ml water kickoff</span>
+                <span>Morning / Wake-up 500ml water kickoff</span>
               </label>
 
               <label 
@@ -387,7 +476,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className={`check-circle ${plan.healthHabits.exerciseCompleted ? 'checked' : ''}`}>
                   {plan.healthHabits.exerciseCompleted && <Check className="w-3 h-3" />}
                 </div>
-                <span>30-45m WHO physical activity / walk</span>
+                <span>20-30m WHO physical activity / walk</span>
               </label>
 
               <label 
@@ -397,7 +486,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className={`check-circle ${plan.healthHabits.sleepTargetAchieved ? 'checked' : ''}`}>
                   {plan.healthHabits.sleepTargetAchieved && <Check className="w-3 h-3" />}
                 </div>
-                <span>7.5 - 8.0h Restorative sleep target</span>
+                <span>7.0 - 8.0h Restorative sleep target</span>
               </label>
             </div>
           </div>
@@ -425,6 +514,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Modals */}
+      {showStartDayModal && (
+        <StartDayModal
+          plan={plan}
+          profile={profile}
+          currentTimeString={currentTimeString}
+          onClose={() => setShowStartDayModal(false)}
+          onApplySchedule={(options) => {
+            onApplyAdaptiveSchedule(options);
+            setGuideDismissed(false);
+          }}
+        />
+      )}
+
       {showAdaptiveModal && (
         <AdaptiveScheduleModal
           plan={plan}
@@ -474,3 +576,4 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     </div>
   );
 };
+

@@ -47,23 +47,27 @@ export const CatchUpModal: React.FC<CatchUpModalProps> = ({
             {analysis.lapsedBlocks.length} earlier tasks lapsed past scheduled time ({formatMinutesToHours(analysis.lapsedMinutes)})
           </div>
           <p className="text-tertiary leading-relaxed">
-            Applying the Pareto 80/20 principle: compressing remaining uncompleted study tasks into high-intensity concept sprints starting at {currentTimeString}.
+            Re-sequencing your remaining day for maximum output starting at {currentTimeString}, protecting deep focus blocks and Indian meal landmarks before bedtime.
           </p>
         </div>
 
         {/* Changes Summary */}
         <div className="space-y-2 mb-6 text-xs text-secondary">
           <div className="flex items-center justify-between p-2.5 rounded-md bg-subtle">
-            <span>GATE Study Sessions</span>
-            <span className="font-mono text-primary">45m High-Yield Sprint</span>
+            <span>GATE Deep Work Sessions</span>
+            <span className="font-mono text-primary">75-90m High-Yield Focus</span>
           </div>
           <div className="flex items-center justify-between p-2.5 rounded-md bg-subtle">
-            <span>DSA Practice</span>
-            <span className="font-mono text-primary">45m 3-Problem Drill</span>
+            <span>DSA & PYQ Practice</span>
+            <span className="font-mono text-primary">Focused Problem Solving</span>
+          </div>
+          <div className="flex items-center justify-between p-2.5 rounded-md bg-subtle">
+            <span>Indian Meal Landmarks</span>
+            <span className="font-mono text-amber-300">Chai (5:30 PM) · Dinner (8:45 PM)</span>
           </div>
           <div className="flex items-center justify-between p-2.5 rounded-md bg-subtle">
             <span>Sleep & Rest Routine</span>
-            <span className="font-mono text-emerald-400">11:00 PM (Preserved)</span>
+            <span className="font-mono text-emerald-400">Sleep Boundary Protected</span>
           </div>
         </div>
 

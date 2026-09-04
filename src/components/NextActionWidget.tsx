@@ -112,14 +112,24 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
     );
   }
 
-  const categoryLabelMap: Record<string, string> = {
-    gate: 'GATE Study',
-    dsa: 'DSA Practice',
-    health: 'Health & Activity',
-    break: 'Break',
-    revision: 'Spaced Revision',
-    routine: 'Daily Routine',
-    mock: 'Mock Test'
+  const getCategoryLabel = (block: TimeBlock) => {
+    const titleLower = block.title.toLowerCase();
+    if (titleLower.includes('lunch')) return '🍛 Indian Lunch';
+    if (titleLower.includes('chai') || titleLower.includes('tea')) return '☕ Evening Chai';
+    if (titleLower.includes('dinner')) return '🍲 Indian Dinner';
+    if (titleLower.includes('kickoff')) return '🌅 Wake-Up Kickoff';
+
+    const categoryLabelMap: Record<string, string> = {
+      gate: '⚡ GATE Study',
+      dsa: '💻 DSA Practice',
+      health: '🏃 Health & Movement',
+      break: '☕ Break & Reset',
+      revision: '🔁 Spaced Revision',
+      routine: 'Daily Routine',
+      mock: '📝 Mock Test'
+    };
+
+    return categoryLabelMap[block.category] || block.category;
   };
 
   return (
@@ -134,7 +144,7 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
             {activeBlock.startTime} – {activeBlock.endTime}
           </span>
           <span className="text-tertiary">·</span>
-          <span>{categoryLabelMap[activeBlock.category] || activeBlock.category}</span>
+          <span className="font-medium text-secondary">{getCategoryLabel(activeBlock)}</span>
         </div>
       </div>
 

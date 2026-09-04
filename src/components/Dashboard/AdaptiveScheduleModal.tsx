@@ -20,7 +20,7 @@ interface AdaptiveScheduleModalProps {
   profile: UserProfile;
   currentTimeString: string;
   onClose: () => void;
-  onApplyAdaptiveSchedule: (options: { startTime?: string; userChosenBedtime?: string; customAvailableMinutes?: number }) => void;
+  onApplyAdaptiveSchedule: (options: { startTime?: string; userChosenBedtime?: string; outputMode?: 'maximum' | 'balanced' | 'accelerated' }) => void;
 }
 
 export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
@@ -33,6 +33,7 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
   const [startMode, setStartMode] = useState<'now' | 'custom'>('now');
   const [customStartTime, setCustomStartTime] = useState(currentTimeString);
   const [bedtimeChoice, setBedtimeChoice] = useState<'recommended' | 'custom'>('recommended');
+  const [outputMode, setOutputMode] = useState<'maximum' | 'balanced' | 'accelerated'>('maximum');
   
   const activeStartTime = startMode === 'now' ? currentTimeString : customStartTime;
   const [sh, sm] = activeStartTime.split(':').map(Number);
@@ -52,24 +53,21 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
   // Calculate gross available time
   const [eh, em] = selectedBedtime.split(':').map(Number);
   let endMinTotal = (eh || 0) * 60 + (em || 0);
-  if (endMinTotal < startMinTotal) endMinTotal += 24 * 60; // crosses midnight
+  if (endMinTotal <= startMinTotal) endMinTotal += 24 * 60; // crosses midnight
   const availableMinutes = Math.max(endMinTotal - startMinTotal, 30);
-
-  const uncompleted = plan.timeBlocks.filter(b => !b.isCompleted);
-  const totalUncompletedMinutes = uncompleted.reduce((sum, b) => sum + b.durationMinutes, 0);
-  const isWorkloadExceeding = totalUncompletedMinutes > availableMinutes - 20;
 
   const handleApply = () => {
     onApplyAdaptiveSchedule({
       startTime: activeStartTime,
-      userChosenBedtime: selectedBedtime
+      userChosenBedtime: selectedBedtime,
+      outputMode
     });
     onClose();
   };
 
   return (
     <div className="modal-overlay">
-      <div className="panel max-w-xl w-full p-6 sm:p-8 relative bg-[#11131c] border-muted shadow-2xl">
+      <div className="panel max-w-xl w-full p-6 sm:p-8 relative bg-[#11131c] border-muted shadow-2xl overflow-y-auto max-h-[92vh]">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-tertiary hover:text-primary p-1 rounded-md bg-subtle border border-subtle"
@@ -81,13 +79,13 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
         <div className="mb-6">
           <div className="text-xs font-mono uppercase tracking-wider text-accent mb-1 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Sleep-Driven Adaptive Scheduling</span>
+            <span>High-Yield Adaptive Scheduler</span>
           </div>
           <h2 className="text-2xl font-bold text-primary font-heading">
-            Adapt Today's Schedule Around Sleep
+            Adapt Today's Schedule
           </h2>
           <p className="text-xs text-secondary mt-1">
-            Choose your sleep time or use the dynamic recommendation. GatePlanner will build your remaining day to finish before bedtime.
+            Re-align remaining hours with Indian standard meals (Lunch, Chai, Dinner) and maximum study output before sleep.
           </p>
         </div>
 
@@ -134,10 +132,57 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
             </div>
           </div>
 
-          {/* 2. DYNAMIC RECOMMENDED SLEEP TIME vs USER-CHOSEN SLEEP TIME */}
+          {/* 2. OUTPUT MODE */}
           <div>
             <label className="block text-xs font-semibold text-primary font-heading mb-2">
-              2. Target Sleep Time (Drives Remaining Schedule)
+              2. Target Output Mode
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setOutputMode('maximum')}
+                className={`p-2.5 rounded-md border text-left text-xs transition-all ${
+                  outputMode === 'maximum'
+                    ? 'bg-indigo-950/40 border-indigo-500/60 text-primary font-semibold'
+                    : 'bg-subtle border-subtle text-secondary'
+                }`}
+              >
+                <div className="text-accent text-[11px] font-bold">Max Output</div>
+                <div className="text-[10px] text-tertiary">7-8.5h Study</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOutputMode('balanced')}
+                className={`p-2.5 rounded-md border text-left text-xs transition-all ${
+                  outputMode === 'balanced'
+                    ? 'bg-indigo-950/40 border-indigo-500/60 text-primary font-semibold'
+                    : 'bg-subtle border-subtle text-secondary'
+                }`}
+              >
+                <div className="text-emerald-400 text-[11px] font-bold">Balanced</div>
+                <div className="text-[10px] text-tertiary">5-6.5h Study</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOutputMode('accelerated')}
+                className={`p-2.5 rounded-md border text-left text-xs transition-all ${
+                  outputMode === 'accelerated'
+                    ? 'bg-indigo-950/40 border-indigo-500/60 text-primary font-semibold'
+                    : 'bg-subtle border-subtle text-secondary'
+                }`}
+              >
+                <div className="text-amber-400 text-[11px] font-bold">Sprint</div>
+                <div className="text-[10px] text-tertiary">8.5h+ Marathon</div>
+              </button>
+            </div>
+          </div>
+
+          {/* 3. DYNAMIC RECOMMENDED SLEEP TIME vs USER-CHOSEN SLEEP TIME */}
+          <div>
+            <label className="block text-xs font-semibold text-primary font-heading mb-2">
+              3. Target Bedtime (Sleep Boundary)
             </label>
 
             <div className="space-y-2.5">
@@ -205,10 +250,10 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
             </div>
           </div>
 
-          {/* 3. LIVE AVAILABLE TIME PREVIEW & WORKLOAD CHECK */}
+          {/* 4. LIVE AVAILABLE TIME PREVIEW */}
           <div className="p-3.5 rounded-md bg-[#090a0f] border border-subtle space-y-2 text-xs">
             <div className="flex items-center justify-between font-mono">
-              <span className="text-tertiary">Calculated Available Window:</span>
+              <span className="text-tertiary">Available Time Window:</span>
               <strong className="text-primary">{formatMinutesToHours(availableMinutes)}</strong>
             </div>
 
@@ -217,19 +262,10 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
               <strong className="text-accent">{selectedBedtime} (Wake {profile.wakeTime})</strong>
             </div>
 
-            {isWorkloadExceeding ? (
-              <div className="pt-2 border-t border-subtle text-[11px] text-amber-300 flex items-start gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  Your remaining workload ({formatMinutesToHours(totalUncompletedMinutes)}) is greater than available time. GatePlanner will prioritize core GATE & DSA, and defer overflow to future buffer sessions to protect your sleep.
-                </span>
-              </div>
-            ) : (
-              <div className="pt-2 border-t border-subtle text-[11px] text-emerald-400 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>All remaining focus blocks and breaks fit cleanly before {selectedBedtime}.</span>
-              </div>
-            )}
+            <div className="pt-2 border-t border-subtle text-[11px] text-emerald-400 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Optimized with Indian meal landmarks (Lunch, Chai, Dinner) & sleep boundary protected.</span>
+            </div>
           </div>
         </div>
 

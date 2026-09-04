@@ -197,6 +197,160 @@ export class PlannerEngine {
 
   /**
    * Deterministically generates or retrieves today's comprehensive plan.
+  /**
+   * Formats total minutes from midnight into 24-hour HH:MM format.
+   */
+  static formatMinutesToTimeString(min: number): string {
+    const h = Math.floor(min / 60) % 24;
+    const m = min % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Generates actionable, zero-guilt, step-by-step guidance immediately upon waking up.
+   */
+  static getWakeUpProtocol(
+    wakeTimeMinutes: number,
+    availableMinutes: number,
+    outputMode: 'maximum' | 'balanced' | 'accelerated' = 'maximum'
+  ): {
+    wakeTime: string;
+    headline: string;
+    mindsetMessage: string;
+    immediateSteps: { stepNumber: number; timeframe: string; title: string; action: string; category: 'hydration' | 'nutrition' | 'mindset' | 'focus' }[];
+    mealRecommendation: string;
+    projectedStudyHours: number;
+  } {
+    const wakeTimeStr = this.formatMinutesToTimeString(wakeTimeMinutes);
+    const studyRatio = outputMode === 'maximum' ? 0.76 : (outputMode === 'accelerated' ? 0.82 : 0.65);
+    const studyMins = Math.round(Math.max(availableMinutes - 60, 30) * studyRatio);
+    const projectedStudyHours = Math.max(Math.round((studyMins / 60) * 10) / 10, 2.0);
+
+    if (wakeTimeMinutes >= 11 * 60 + 30 && wakeTimeMinutes <= 15 * 60 + 30) {
+      // Afternoon Wake-Up (e.g. 1:00 PM)
+      const lunchEndMin = wakeTimeMinutes + 25;
+      const lunchEndStr = this.formatMinutesToTimeString(lunchEndMin);
+
+      return {
+        wakeTime: wakeTimeStr,
+        headline: `Afternoon Wake-Up Protocol (${wakeTimeStr})`,
+        mindsetMessage: `Zero morning guilt! You still have ~${formatMinutesToHours(availableMinutes)} of high-energy wakefulness. Your optimized schedule below delivers ${projectedStudyHours}h of pure GATE & DSA deep work before bedtime.`,
+        mealRecommendation: `Have a clean Indian lunch now (${wakeTimeStr} – ${lunchEndStr}) to fuel your brain with glucose without food-coma heaviness. Evening tea is at 05:30 PM and dinner at 08:45 PM.`,
+        projectedStudyHours,
+        immediateSteps: [
+          {
+            stepNumber: 1,
+            timeframe: '0 - 5 min',
+            title: 'Instant 500ml Hydration & Bright Light',
+            action: 'Chug 500ml water immediately. Splash cold water on your face and open curtains/bright daylight to clear sleep inertia and reset mental alertness.',
+            category: 'hydration'
+          },
+          {
+            stepNumber: 2,
+            timeframe: '5 - 25 min',
+            title: 'Nutritious Indian Lunch / Energy Fuel',
+            action: 'Eat a clean, protein-rich meal (dal, roti/rice, curd/paneer/eggs). Avoid heavy deep-fried foods to stay mentally razor-sharp.',
+            category: 'nutrition'
+          },
+          {
+            stepNumber: 3,
+            timeframe: '25 - 30 min',
+            title: 'Zero-Guilt Mindset & Desk Clearing',
+            action: 'Put smartphone on Do Not Disturb. Clear your study desk, open your target GATE syllabus section, and set your focus timer.',
+            category: 'mindset'
+          },
+          {
+            stepNumber: 4,
+            timeframe: 'Immediate',
+            title: 'Launch Deep Focus Block 1 (GATE Core Theory)',
+            action: 'Jump straight into your primary engineering subject’s core proofs and key derivations while wakefulness is peaking!',
+            category: 'focus'
+          }
+        ]
+      };
+    } else if (wakeTimeMinutes < 11 * 60 + 30) {
+      // Morning Wake-Up (e.g. 7:00 AM)
+      return {
+        wakeTime: wakeTimeStr,
+        headline: `Morning Fresh Kickoff (${wakeTimeStr})`,
+        mindsetMessage: `Great start! You have an expansive ${formatMinutesToHours(availableMinutes)} window ahead. Capitalize on quiet morning hours for peak conceptual clarity and deep problem solving.`,
+        mealRecommendation: `500ml water now, energizing breakfast at 08:30 AM, Indian lunch at 01:30 PM, evening chai at 05:30 PM, and dinner at 08:45 PM.`,
+        projectedStudyHours,
+        immediateSteps: [
+          {
+            stepNumber: 1,
+            timeframe: '0 - 10 min',
+            title: 'Morning 500ml Water Kickoff & Movement',
+            action: 'Hydrate with 500ml water. 5-10 min dynamic stretching and natural sun exposure to stimulate nervous system alertness.',
+            category: 'hydration'
+          },
+          {
+            stepNumber: 2,
+            timeframe: '10 - 30 min',
+            title: 'Wholesome Breakfast & Focus Preparation',
+            action: 'Nutritious breakfast + warm beverage. Review today’s high-yield section breakdown.',
+            category: 'nutrition'
+          },
+          {
+            stepNumber: 3,
+            timeframe: '30 - 35 min',
+            title: 'Distraction-Free Desk Alignment',
+            action: 'Arrange notebook, rough scratch pad, GATE virtual calculator reference, and silence all notifications.',
+            category: 'mindset'
+          },
+          {
+            stepNumber: 4,
+            timeframe: 'Immediate',
+            title: 'Launch Morning GATE Deep Work Block',
+            action: 'Dive straight into your core subject’s highest-weightage concepts and theoretical foundations.',
+            category: 'focus'
+          }
+        ]
+      };
+    } else {
+      // Evening / Night Owl Wake-Up (after 3:30 PM)
+      return {
+        wakeTime: wakeTimeStr,
+        headline: `Night Owl High-Yield Kickoff (${wakeTimeStr})`,
+        mindsetMessage: `Night focus cycle activated! Leverage uninterrupted evening and midnight hours to achieve ${projectedStudyHours}h of pure GATE mastery.`,
+        mealRecommendation: `Start with a quick protein snack and tea now, followed by an energizing Indian dinner at 08:45 PM.`,
+        projectedStudyHours,
+        immediateSteps: [
+          {
+            stepNumber: 1,
+            timeframe: '0 - 10 min',
+            title: 'Cold Water Splash & 500ml Hydration',
+            action: 'Splash cold water on face and drink 500ml water to reset body temperature and trigger mental alertness.',
+            category: 'hydration'
+          },
+          {
+            stepNumber: 2,
+            timeframe: '10 - 25 min',
+            title: 'Quick Protein Fuel & Evening Tea',
+            action: 'Light snack + tea/warm beverage to activate cognitive processing.',
+            category: 'nutrition'
+          },
+          {
+            stepNumber: 3,
+            timeframe: '25 - 30 min',
+            title: 'Night Desk Preparation & Goal Setting',
+            action: 'Turn on good study lighting, queue up syllabus topics, and eliminate social media tabs.',
+            category: 'mindset'
+          },
+          {
+            stepNumber: 4,
+            timeframe: 'Immediate',
+            title: 'Launch Deep Sprint 1',
+            action: 'Tackle the most demanding GATE engineering concepts first before midnight!',
+            category: 'focus'
+          }
+        ]
+      };
+    }
+  }
+
+  /**
+   * Deterministically generates or retrieves today's comprehensive plan.
    */
   static getOrCreateDailyPlan(dateStr: string): DailyPlan {
     const existing = StorageService.getDailyPlan(dateStr);
@@ -205,56 +359,16 @@ export class PlannerEngine {
     }
 
     const profile = StorageService.getProfile();
-    const syllabus = StorageService.getSyllabus();
-    const { currentDay, totalDays } = this.getDayNumber(profile.startDate, dateStr);
+    const [wakeH, wakeM] = (profile.wakeTime || '07:00').split(':').map(Number);
+    const startMinutesTotal = (wakeH || 7) * 60 + (wakeM || 0);
 
-    const dsaProblemIds = DsaEngine.selectDailyProblems(dateStr, profile.dsaDailyCount);
-    const dueRevisions = RevisionEngine.getRevisionsDueOn(dateStr);
-    const targetTopics = this.selectTopicsForDay(syllabus, currentDay, totalDays);
-    const timeBlocks = this.generateTimeBlocks(targetTopics, dsaProblemIds, dueRevisions, profile);
-
-    const defaultHabits: HealthHabitChecklist = {
-      morningKickoffHydration: false,
-      morningStretching: false,
-      nutritiousBreakfast: false,
-      studyBreaksTaken: 0,
-      studyBreaksGoal: 4,
-      midMorningEyeRest: false,
-      excessiveSittingAvoided: false,
-      healthyMeals: false,
-      exerciseMinutes: 0,
-      exerciseCompleted: false,
-      hydrationGlasses: 0,
-      hydrationGoalGlasses: 10,
-      healthyDinner: false,
-      nightWindDown: false,
-      sleepHours: 0,
-      sleepTargetAchieved: false
-    };
-
-    const newPlan: DailyPlan = {
-      date: dateStr,
-      dayNumber: currentDay,
-      totalDays: totalDays,
-      timeBlocks,
-      dsaProblemIds,
-      healthHabits: defaultHabits,
-      isCompleted: false,
-      actualStudyMinutes: 0,
-      targetStudyMinutes: profile.dailyTargetStudyMinutes,
-      dailyScore: 0,
-      notes: '',
+    const { updatedPlan } = this.generateMaximumOutputSchedule(dateStr, startMinutesTotal, {
+      startTime: profile.wakeTime || '07:00',
       userChosenBedtime: profile.bedTime || '23:00',
-      recommendedBedtime: profile.bedTime || '23:00',
-      sleepConstraint: {
-        targetSleepTime: profile.bedTime || '23:00',
-        isUserSelected: false,
-        wakeTimeTomorrow: profile.wakeTime || '07:00'
-      }
-    };
+      outputMode: 'maximum'
+    });
 
-    StorageService.saveDailyPlan(newPlan);
-    return newPlan;
+    return updatedPlan;
   }
 
   /**
@@ -294,176 +408,13 @@ export class PlannerEngine {
   }
 
   /**
-   * Generates standard initial timeblocks.
-   */
-  private static generateTimeBlocks(
-    topics: Topic[],
-    dsaIds: string[],
-    revisions: { topicId: string; topicName: string; subjectName: string }[],
-    profile: UserProfile
-  ): TimeBlock[] {
-    const blocks: TimeBlock[] = [];
-    const dsaBank = StorageService.getDsaBank();
-    const dsaProblems = dsaIds.map(id => dsaBank.find(p => p.id === id)).filter(Boolean);
-
-    // 07:00 - 07:45 : Morning Routine & Movement
-    blocks.push({
-      id: 'tb_morning',
-      startTime: '07:00',
-      endTime: '07:45',
-      title: 'Morning Routine & Movement',
-      subtitle: '500ml water kickoff, 15m dynamic stretch, sun exposure & breakfast',
-      category: 'routine',
-      durationMinutes: 45,
-      isCompleted: false,
-      priority: 'medium'
-    });
-
-    // 08:00 - 09:30 : Morning Focus Block (Topic 1)
-    if (topics[0]) {
-      blocks.push({
-        id: `tb_gate_${topics[0].id}`,
-        startTime: '08:00',
-        endTime: '09:30',
-        title: `${topics[0].subjectName} — ${topics[0].name}`,
-        subtitle: `Core Theory & Derivations (${topics[0].studyBreakdown ? topics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
-        category: 'gate',
-        topicId: topics[0].id,
-        subjectId: topics[0].subjectId,
-        durationMinutes: 90,
-        isCompleted: false,
-        priority: 'high'
-      });
-    }
-
-    // 09:30 - 09:45 : Active Break (after 90m deep focus)
-    blocks.push({
-      id: 'tb_break_1',
-      startTime: '09:30',
-      endTime: '09:45',
-      title: 'Active Cognitive Break & Posture Reset',
-      subtitle: '20-20-20 eye rest, stand up & stretch, refill water bottle',
-      category: 'break',
-      durationMinutes: 15,
-      isCompleted: false,
-      priority: 'low'
-    });
-
-    // 09:45 - 11:00 : Topic 1 Practice / 26-Year PYQs
-    if (topics[0]) {
-      blocks.push({
-        id: `tb_pyq_${topics[0].id}`,
-        startTime: '09:45',
-        endTime: '11:00',
-        title: `GATE PYQ Drill (2000-2025) — ${topics[0].name}`,
-        subtitle: 'Solve historical GATE conceptual questions & trap analysis',
-        category: 'gate',
-        topicId: topics[0].id,
-        subjectId: topics[0].subjectId,
-        durationMinutes: 75,
-        isCompleted: false,
-        priority: 'high'
-      });
-    }
-
-    // 13:00 - 14:00 : Mindful Lunch
-    blocks.push({
-      id: 'tb_lunch',
-      startTime: '13:00',
-      endTime: '14:00',
-      title: 'Mindful Lunch & Digital Detox',
-      subtitle: 'Nutritious meal, screen-off for 30m, light walk',
-      category: 'routine',
-      durationMinutes: 60,
-      isCompleted: false,
-      priority: 'low'
-    });
-
-    // 17:30 - 18:45 : Daily DSA Practice
-    const dsaTitles = dsaProblems.map(p => `${p?.title} (${p?.difficulty})`).join(', ');
-    blocks.push({
-      id: 'tb_dsa_session',
-      startTime: '17:30',
-      endTime: '18:45',
-      title: 'Daily DSA Practice (3 Problems)',
-      subtitle: dsaTitles || '3 Curated Algorithm Problems',
-      category: 'dsa',
-      durationMinutes: 75,
-      isCompleted: false,
-      priority: 'high'
-    });
-
-    // 18:45 - 19:45 : WHO Physical Activity
-    blocks.push({
-      id: 'tb_exercise',
-      startTime: '18:45',
-      endTime: '19:45',
-      title: 'WHO Physical Activity & Exercise',
-      subtitle: '30-45 min brisk walk, cycling, or bodyweight strength session',
-      category: 'health',
-      durationMinutes: 60,
-      isCompleted: false,
-      priority: 'medium'
-    });
-
-    // 20:30 - 21:45 : Evening Focus Block (Topic 2)
-    if (topics[1]) {
-      blocks.push({
-        id: `tb_gate_${topics[1].id}`,
-        startTime: '20:30',
-        endTime: '21:45',
-        title: `${topics[1].subjectName} — ${topics[1].name}`,
-        subtitle: `In-depth concepts & problem solving`,
-        category: 'gate',
-        topicId: topics[1].id,
-        subjectId: topics[1].subjectId,
-        durationMinutes: 75,
-        isCompleted: false,
-        priority: 'high'
-      });
-    }
-
-    // 21:45 - 22:30 : Spaced Repetition / Daily Review
-    const revSubtitle = revisions.length > 0
-      ? `Spaced review of: ${revisions.map(r => r.topicName).join(', ')}`
-      : 'Review day formula sheets & error notebook';
-    blocks.push({
-      id: 'tb_revision',
-      startTime: '21:45',
-      endTime: '22:30',
-      title: 'Automated Spaced Revision & Consolidation',
-      subtitle: revSubtitle,
-      category: 'revision',
-      durationMinutes: 45,
-      isCompleted: false,
-      priority: 'medium'
-    });
-
-    // 22:40 - 23:00 : Wind-down before Sleep Deadline
-    blocks.push({
-      id: 'tb_night_winddown',
-      startTime: '22:40',
-      endTime: '23:00',
-      title: 'Night Wind-Down & Rest Preparation',
-      subtitle: 'Screen dimming, hydration & desk prep for tomorrow',
-      category: 'routine',
-      durationMinutes: 20,
-      isCompleted: false,
-      priority: 'low'
-    });
-
-    return blocks;
-  }
-
-  /**
    * Constructs the complete canonical daily workload catalog for today.
-   * Sizes tasks with realistic, natural deep-work durations rather than artificially short blocks.
+   * Sizes tasks with high-yield, deep-work focus blocks to eliminate wasted time.
    */
   private static getFullDailyWorkloadCandidates(
     dateStr: string,
     completedBlocks: TimeBlock[],
-    existingUncompleted: TimeBlock[],
-    startMinutesTotal: number
+    existingUncompleted: TimeBlock[]
   ): TimeBlock[] {
     const profile = StorageService.getProfile();
     const syllabus = StorageService.getSyllabus();
@@ -485,16 +436,16 @@ export class PlannerEngine {
         startTime: '00:00',
         endTime: '00:00',
         title: `${targetTopics[0].subjectName} — ${targetTopics[0].name}`,
-        subtitle: `Deep Concept Study & Derivations (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
+        subtitle: `Core Concept Mastery & Derivations (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
         category: 'gate',
         topicId: targetTopics[0].id,
         subjectId: targetTopics[0].subjectId,
-        durationMinutes: 70, // Realistic deep study allocation
+        durationMinutes: 90, // High-yield deep study allocation
         isCompleted: false,
         priority: 'high'
       });
 
-      // 2. Topic 1 Historical PYQ Practice Drill
+      // 2. Topic 1 Historical PYQ Practice Drill (2000-2025)
       candidates.push({
         id: `tb_pyq_${targetTopics[0].id}`,
         startTime: '00:00',
@@ -504,18 +455,16 @@ export class PlannerEngine {
         category: 'gate',
         topicId: targetTopics[0].id,
         subjectId: targetTopics[0].subjectId,
-        durationMinutes: 50, // Realistic problem solving drill
+        durationMinutes: 75, // Rigorous problem solving drill
         isCompleted: false,
         priority: 'high'
       });
     }
 
-    // 3. Daily DSA Practice Session (Realistic Time for Problem Solving)
+    // 3. Daily DSA Practice Session (3 Curated Problems)
     const isDsaCompleted = completedBlocks.some(b => b.category === 'dsa');
     if (!isDsaCompleted) {
       const dsaTitles = dsaProblems.map(p => `${p?.title} (${p?.difficulty})`).join(', ');
-      // Sized realistically based on problem count (~20m per algorithmic problem)
-      const dsaNaturalDuration = Math.max((dsaProblems.length || 3) * 20, 60);
       candidates.push({
         id: 'tb_dsa_session',
         startTime: '00:00',
@@ -523,32 +472,13 @@ export class PlannerEngine {
         title: `Daily DSA Practice (${dsaProblems.length || 3} Problems)`,
         subtitle: dsaTitles || '3 Curated Algorithm Problems',
         category: 'dsa',
-        durationMinutes: dsaNaturalDuration,
+        durationMinutes: 65, // High-efficiency algorithmic problem solving
         isCompleted: false,
         priority: 'high'
       });
     }
 
-    // 4. Automated Spaced Revision & Consolidation
-    const isRevisionCompleted = completedBlocks.some(b => b.category === 'revision');
-    if (!isRevisionCompleted) {
-      const revSubtitle = dueRevisions.length > 0
-        ? `Spaced review of: ${dueRevisions.map(r => r.topicName).join(', ')}`
-        : 'Review day formula sheets & active recall notebook';
-      candidates.push({
-        id: 'tb_revision',
-        startTime: '00:00',
-        endTime: '00:00',
-        title: 'Automated Spaced Revision & Consolidation',
-        subtitle: revSubtitle,
-        category: 'revision',
-        durationMinutes: 30, // Focused active recall
-        isCompleted: false,
-        priority: 'high'
-      });
-    }
-
-    // 5. Topic 2 In-Depth Problem Solving
+    // 4. Topic 2 In-Depth Problem Solving
     if (targetTopics[1] && !completedTopicIds.has(targetTopics[1].id)) {
       candidates.push({
         id: `tb_gate_${targetTopics[1].id}`,
@@ -559,21 +489,53 @@ export class PlannerEngine {
         category: 'gate',
         topicId: targetTopics[1].id,
         subjectId: targetTopics[1].subjectId,
-        durationMinutes: 50,
+        durationMinutes: 80,
         isCompleted: false,
-        priority: 'medium'
+        priority: 'high'
       });
     }
 
-    // 6. WHO Physical Activity & Exercise
+    // 5. Automated Spaced Revision & Formula Consolidation
+    const isRevisionCompleted = completedBlocks.some(b => b.category === 'revision');
+    if (!isRevisionCompleted) {
+      const revSubtitle = dueRevisions.length > 0
+        ? `Spaced review of: ${dueRevisions.map(r => r.topicName).join(', ')}`
+        : 'Review formula sheets, active recall & error notebook';
+      candidates.push({
+        id: 'tb_revision',
+        startTime: '00:00',
+        endTime: '00:00',
+        title: 'Automated Spaced Revision & Consolidation',
+        subtitle: revSubtitle,
+        category: 'revision',
+        durationMinutes: 40,
+        isCompleted: false,
+        priority: 'high'
+      });
+    }
+
+    // 6. High-Yield Practice / Speed Drill Sprint
+    candidates.push({
+      id: 'tb_high_yield_drill',
+      startTime: '00:00',
+      endTime: '00:00',
+      title: 'High-Yield Trap Analysis & Speed Drill',
+      subtitle: 'Timer-based MSQ/NAT accuracy calibration & shortcut mastery',
+      category: 'gate',
+      durationMinutes: 60,
+      isCompleted: false,
+      priority: 'medium'
+    });
+
+    // 7. WHO Physical Activity & Exercise
     const isHealthCompleted = completedBlocks.some(b => b.category === 'health');
     if (!isHealthCompleted) {
       candidates.push({
         id: 'tb_exercise',
         startTime: '00:00',
         endTime: '00:00',
-        title: 'WHO Physical Activity & Exercise',
-        subtitle: '20-25 min brisk movement, dynamic stretching or postural reset',
+        title: 'WHO Physical Activity & Movement',
+        subtitle: '20-25 min brisk walk, dynamic stretch or postural reset',
         category: 'health',
         durationMinutes: 25,
         isCompleted: false,
@@ -581,13 +543,13 @@ export class PlannerEngine {
       });
     }
 
-    // Merge with any custom uncompleted tasks already in the plan
+    // Merge with any uncompleted tasks already in the plan
     const merged: TimeBlock[] = [];
     const seenKeys = new Set<string>();
 
     existingUncompleted.forEach(b => {
-      const isMorningRoutine = b.id === 'tb_morning' || b.id === 'tb_lunch';
-      if (isMorningRoutine && startMinutesTotal >= 720) return;
+      const isRoutineOrMeal = b.category === 'routine' || b.id.startsWith('tb_morning') || b.id.startsWith('tb_lunch') || b.id.startsWith('tb_chai') || b.id.startsWith('tb_dinner');
+      if (isRoutineOrMeal) return; // Will be placed canonically by maximum output generator
 
       const k = b.topicId || b.dsaProblemId || b.id;
       seenKeys.add(k);
@@ -605,10 +567,6 @@ export class PlannerEngine {
     return merged;
   }
 
-  // =========================================================================
-  // SLEEP-DRIVEN ADAPTIVE DAILY SCHEDULING (HIGH-QUALITY DEEP WORK ENGINE)
-  // =========================================================================
-
   /**
    * Dynamically calculates the RECOMMENDED sleep time based on actual state.
    */
@@ -617,14 +575,6 @@ export class PlannerEngine {
     profile: UserProfile,
     currentTimeMinutes: number
   ): { recommendedTimeStr: string; recommendedMinutes: number; rationale: string } {
-    const uncompletedProductive = plan.timeBlocks.filter(b => 
-      !b.isCompleted && 
-      !b.id.startsWith('tb_sleep') && 
-      !b.id.startsWith('tb_night_winddown') &&
-      !b.title.includes('Night Wind-Down')
-    );
-    const uncompletedWorkload = uncompletedProductive.reduce((sum, b) => sum + b.durationMinutes, 0);
-
     const [wakeH, wakeM] = (profile.wakeTime || '07:00').split(':').map(Number);
     const wakeTomorrowMinutes = (wakeH * 60 + wakeM) + 24 * 60;
 
@@ -632,210 +582,83 @@ export class PlannerEngine {
     const latestSafeBedtimeMinutes = wakeTomorrowMinutes - 420;
 
     const [stdH, stdM] = (profile.bedTime || '23:00').split(':').map(Number);
-    const standardBedtimeMinutes = stdH * 60 + stdM;
+    let standardBedtimeMinutes = stdH * 60 + stdM;
+    if (standardBedtimeMinutes <= currentTimeMinutes && standardBedtimeMinutes < 720) {
+      standardBedtimeMinutes += 24 * 60;
+    }
 
-    if (currentTimeMinutes <= standardBedtimeMinutes - uncompletedWorkload - 30) {
+    if (currentTimeMinutes <= standardBedtimeMinutes - 180) {
       return {
         recommendedTimeStr: profile.bedTime || '23:00',
         recommendedMinutes: standardBedtimeMinutes,
-        rationale: 'Normal pace maintained. Full workload fits comfortably before standard bedtime.'
+        rationale: `Standard pace maintained. Full high-yield study fits cleanly before ${profile.bedTime || '23:00'}.`
       };
     }
 
-    const neededMinutes = Math.min(uncompletedWorkload || 180, 240) + 20;
     const dynamicallyCalculated = Math.min(
-      Math.max(currentTimeMinutes + neededMinutes, standardBedtimeMinutes),
+      Math.max(currentTimeMinutes + 240, standardBedtimeMinutes),
       latestSafeBedtimeMinutes
     );
 
-    const bedH = Math.floor(dynamicallyCalculated / 60) % 24;
-    const bedM = dynamicallyCalculated % 60;
-    const formatted = `${bedH.toString().padStart(2, '0')}:${bedM.toString().padStart(2, '0')}`;
+    const formatted = this.formatMinutesToTimeString(dynamicallyCalculated);
 
     return {
       recommendedTimeStr: formatted,
       recommendedMinutes: dynamicallyCalculated,
-      rationale: `Adaptive pace: prioritizes deep GATE & DSA sessions while protecting >= 7h sleep before ${profile.wakeTime}.`
+      rationale: `Adaptive schedule: maximizes GATE & DSA output while protecting >= 7h sleep before ${profile.wakeTime}.`
     };
   }
 
   /**
-   * Deep-Work Scheduling & Intelligent Cognitive Break Placement:
-   * Prioritizes DEPTH over task quantity.
-   * Adopts realistic natural durations and groups compatible tasks (Theory + PYQs)
-   * while deferring lower-priority tasks rather than excessively compressing everything into tiny fragments.
+   * MAXIMUM OUTPUT SCHEDULING ENGINE WITH INDIAN STANDARD MEAL TIMES:
+   * 1. Sets up immediate wake-up kickoff / lunch block (tailored to wake time).
+   * 2. Inserts Indian Standard Meal landmarks:
+   *    - Indian Lunch (01:30 PM – 02:15 PM)
+   *    - Indian Evening Chai (05:30 PM – 05:50 PM)
+   *    - Indian Dinner & Digestion Walk (08:45 PM – 09:30 PM)
+   * 3. Slices available time into productive windows and fills with deep-work focus blocks.
+   * 4. Eliminates wasteful fillers and guarantees 7-8+ hours of high-yield study.
    */
-  private static planBreaksAndStudyDurations(
-    tasks: TimeBlock[],
-    targetProductiveWindowMinutes: number
-  ): {
-    fittedTasks: TimeBlock[];
-    allocatedDurations: number[];
-    breakPlacements: { afterTaskIndex: number; durationMinutes: number; title: string; subtitle: string }[];
-  } {
-    if (tasks.length === 0) {
-      return { fittedTasks: [], allocatedDurations: [], breakPlacements: [] };
-    }
-
-    // 1. Minimum useful deep-work durations per category
-    const getMinUsefulDuration = (category: string, title: string): number => {
-      if (category === 'gate') {
-        return title.includes('PYQ') ? 35 : 45; // Core theory needs >= 45m; PYQs need >= 35m
-      }
-      if (category === 'dsa') return 45; // DSA needs realistic problem solving time
-      if (category === 'revision') return 20; // Focused active recall
-      if (category === 'health') return 20;
-      return 20;
-    };
-
-    // 2. Cognitive threshold for breaks based on window size
-    const cognitiveThreshold = targetProductiveWindowMinutes >= 180
-      ? 65
-      : (targetProductiveWindowMinutes >= 120 ? 75 : 85);
-
-    const defaultBreakDuration = targetProductiveWindowMinutes >= 180
-      ? 12
-      : (targetProductiveWindowMinutes >= 120 ? 10 : 8);
-
-    // 3. Select tasks by depth and value — avoid over-packing
-    const fittedTasks: TimeBlock[] = [];
-    const breakPlacements: { afterTaskIndex: number; durationMinutes: number; title: string; subtitle: string }[] = [];
-    let accumulatedTime = 0;
-    let accumulatedCognitiveLoad = 0;
-
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      const minDur = getMinUsefulDuration(task.category, task.title);
-
-      // Check if adding this task would over-fragment the day
-      // When time is limited, we prefer giving more time to fewer tasks
-      if (accumulatedTime + minDur > targetProductiveWindowMinutes && fittedTasks.length > 0) {
-        // Stop adding further tasks: preserve depth and defer remaining tasks!
-        break;
-      }
-
-      fittedTasks.push(task);
-      accumulatedTime += minDur;
-
-      // Cognitive load tracking
-      const cogWeight = (task.category === 'gate' || task.category === 'dsa')
-        ? 1.0
-        : (task.category === 'revision' ? 0.75 : 0.0);
-
-      accumulatedCognitiveLoad += minDur * cogWeight;
-
-      // Check if a recovery break should be placed after this task
-      const isLastTask = i === tasks.length - 1;
-      if (!isLastTask) {
-        const nextTask = tasks[i + 1];
-        const isCurrentPhysical = task.category === 'health' || task.category === 'routine';
-        const isNextPhysical = nextTask.category === 'health' || nextTask.category === 'routine';
-        const isNextSameTopic = Boolean(task.topicId && nextTask.topicId && task.topicId === nextTask.topicId);
-
-        let shouldBreak = false;
-        if (!isCurrentPhysical && !isNextPhysical) {
-          if (isNextSameTopic) {
-            // Keep related theory + PYQs contiguous unless continuous load exceeds 85m
-            shouldBreak = accumulatedCognitiveLoad >= 85;
-          } else {
-            shouldBreak = accumulatedCognitiveLoad >= cognitiveThreshold;
-          }
-        }
-
-        if (shouldBreak && accumulatedTime + defaultBreakDuration + 25 <= targetProductiveWindowMinutes) {
-          const isDsaRecovery = task.category === 'dsa';
-          breakPlacements.push({
-            afterTaskIndex: fittedTasks.length - 1,
-            durationMinutes: defaultBreakDuration,
-            title: isDsaRecovery ? 'Mental Recovery & Hydration Break' : 'Active Cognitive Break & Posture Reset',
-            subtitle: isDsaRecovery 
-              ? 'Step away from screen, hydrate & resting eye scan' 
-              : '20-20-20 eye rest, hydration refill & standing stretch'
-          });
-
-          accumulatedTime += defaultBreakDuration;
-          accumulatedCognitiveLoad = 0;
-        }
-      }
-    }
-
-    if (fittedTasks.length === 0 && tasks.length > 0) {
-      fittedTasks.push(tasks[0]);
-    }
-
-    // 4. Proportional Distribution to grant Deep, Realistic Focus Blocks
-    const totalBreakMinutes = breakPlacements.reduce((sum, b) => sum + b.durationMinutes, 0);
-    const totalStudyTimeAvailable = Math.max(targetProductiveWindowMinutes - totalBreakMinutes, 15);
-
-    const baseFittedSum = fittedTasks.reduce((sum, t) => sum + t.durationMinutes, 0);
-    const allocatedDurations: number[] = [];
-    let allocatedSum = 0;
-
-    fittedTasks.forEach((t, i) => {
-      if (i === fittedTasks.length - 1) {
-        // Final task takes the exact remaining study minutes to guarantee zero gap!
-        allocatedDurations.push(Math.max(totalStudyTimeAvailable - allocatedSum, 15));
-      } else {
-        const prop = Math.round((t.durationMinutes / baseFittedSum) * totalStudyTimeAvailable);
-        const minVal = getMinUsefulDuration(t.category, t.title);
-        const clamped = Math.max(prop, minVal);
-        allocatedDurations.push(clamped);
-        allocatedSum += clamped;
-      }
-    });
-
-    return { fittedTasks, allocatedDurations, breakPlacements };
-  }
-
-  /**
-   * Gap-Free Adaptive Daily Scheduling with Intelligent Cognitive Breaks:
-   * 1. Calculates the FULL available window from current time to selected sleep deadline.
-   * 2. Retrieves ALL eligible uncompleted work for today (GATE, DSA, PYQ, Revisions, Health).
-   * 3. Groups related tasks and places breaks based on continuous cognitive load rather than blindly after every task.
-   * 4. Ends with exactly ONE wind-down block (15-20m) meeting the sleep deadline.
-   */
-  static adaptDailySchedule(
+  static generateMaximumOutputSchedule(
     dateStr: string,
+    startMinutesTotal: number,
     options: AdaptiveScheduleOptions = {}
   ): { updatedPlan: DailyPlan; report: AdaptiveScheduleReport } {
-    const rawPlan = this.getOrCreateDailyPlan(dateStr);
+    const rawPlan = StorageService.getDailyPlan(dateStr) || {
+      date: dateStr,
+      dayNumber: 1,
+      totalDays: 158,
+      timeBlocks: [],
+      dsaProblemIds: [],
+      healthHabits: {
+        morningKickoffHydration: false,
+        morningStretching: false,
+        nutritiousBreakfast: false,
+        studyBreaksTaken: 0,
+        studyBreaksGoal: 4,
+        midMorningEyeRest: false,
+        excessiveSittingAvoided: false,
+        healthyMeals: false,
+        exerciseMinutes: 0,
+        exerciseCompleted: false,
+        hydrationGlasses: 0,
+        hydrationGoalGlasses: 10,
+        healthyDinner: false,
+        nightWindDown: false,
+        sleepHours: 0,
+        sleepTargetAchieved: false
+      },
+      isCompleted: false,
+      actualStudyMinutes: 0,
+      targetStudyMinutes: 240,
+      dailyScore: 0,
+      notes: ''
+    };
+
     const profile = StorageService.getProfile();
+    const outputMode = options.outputMode || rawPlan.outputMode || 'maximum';
 
-    // 1. Current Start Time (in absolute minutes from 00:00)
-    let startMinutesTotal: number;
-    if (options.startTime) {
-      const [sh, sm] = options.startTime.split(':').map(Number);
-      startMinutesTotal = (sh || 0) * 60 + (sm || 0);
-    } else {
-      const now = new Date();
-      startMinutesTotal = now.getHours() * 60 + Math.ceil(now.getMinutes() / 5) * 5;
-    }
-
-    // 2. Separate Completed Blocks
-    const completedBlocks: TimeBlock[] = [];
-    const existingUncompleted: TimeBlock[] = [];
-
-    rawPlan.timeBlocks.forEach(b => {
-      const isSleepOrWindDown = b.id.startsWith('tb_sleep') || b.id.startsWith('tb_night_winddown') || b.title.includes('Sleep Target') || b.title.includes('Night Wind-Down');
-      const isBreak = b.category === 'break' || b.id.startsWith('tb_break') || b.title.includes('Cognitive Break') || b.title.includes('Recovery & Hydration');
-
-      if (b.isCompleted) {
-        completedBlocks.push({
-          ...b,
-          subtitle: this.cleanSubtitle(b.subtitle)
-        });
-        return;
-      }
-
-      if (!isSleepOrWindDown && !isBreak) {
-        existingUncompleted.push({
-          ...b,
-          subtitle: this.cleanSubtitle(b.subtitle)
-        });
-      }
-    });
-
-    // 3. Determine Selected Sleep Deadline (Hard Constraint)
+    // 1. Determine Effective Bedtime (Constraint)
     const { recommendedTimeStr } = this.calculateDynamicRecommendedBedtime(
       rawPlan,
       profile,
@@ -846,102 +669,265 @@ export class PlannerEngine {
     const [effH, effM] = effectiveBedtimeStr.split(':').map(Number);
     let effectiveBedtimeMinutes = (effH || 0) * 60 + (effM || 0);
 
-    // Cross-midnight handling: e.g. start at 22:17 (1337m), bedtime 03:00 (180m -> 1620m)
     if (effectiveBedtimeMinutes <= startMinutesTotal) {
-      effectiveBedtimeMinutes += 24 * 60; // add 24 hours
+      effectiveBedtimeMinutes += 24 * 60; // Crosses midnight
     }
 
-    // Total gross minutes available until sleep
-    const grossAvailableMinutes = Math.max(effectiveBedtimeMinutes - startMinutesTotal, 30);
-    // Exactly 20 minutes reserved for wind-down right before sleep
-    const windDownDuration = 20;
-    const targetProductiveWindowMinutes = Math.max(grossAvailableMinutes - windDownDuration, 15);
+    const grossAvailableMinutes = Math.max(effectiveBedtimeMinutes - startMinutesTotal, 45);
 
-    // 4. Retrieve Complete Workload Catalog for Today
-    const availableCandidateTasks = this.getFullDailyWorkloadCandidates(
+    // 2. Generate Immediate Wake-Up Protocol
+    const wakeUpProtocol = this.getWakeUpProtocol(startMinutesTotal, grossAvailableMinutes, outputMode);
+
+    // 3. Separate Completed Blocks
+    const completedBlocks: TimeBlock[] = rawPlan.timeBlocks.filter(b => b.isCompleted).map(b => ({
+      ...b,
+      subtitle: this.cleanSubtitle(b.subtitle)
+    }));
+    const existingUncompleted: TimeBlock[] = rawPlan.timeBlocks.filter(b => !b.isCompleted);
+
+    // 4. Retrieve Full Workload Candidates
+    const candidateTasks = this.getFullDailyWorkloadCandidates(
       dateStr,
       completedBlocks,
-      existingUncompleted,
-      startMinutesTotal
+      existingUncompleted
     );
 
-    const priorityWeight: Record<string, number> = {
-      revision: 4,
-      gate: 3,
-      dsa: 3,
-      health: 2,
-      routine: 1,
-      break: 1
-    };
-
-    const sortedTasks = [...availableCandidateTasks].sort((a, b) => {
-      const pDiff = (priorityWeight[b.category] || 1) - (priorityWeight[a.category] || 1);
-      if (pDiff !== 0) return pDiff;
-      return (b.priority === 'high' ? 2 : 1) - (a.priority === 'high' ? 2 : 1);
-    });
-
-    // 5. Intelligent Cognitive Break Planning & Duration Allocation
-    const { fittedTasks, allocatedDurations, breakPlacements } = this.planBreaksAndStudyDurations(
-      sortedTasks,
-      targetProductiveWindowMinutes
-    );
-
-    // Map break placements by task index
-    const breakMap = new Map<number, { durationMinutes: number; title: string; subtitle: string }>();
-    breakPlacements.forEach(bp => breakMap.set(bp.afterTaskIndex, bp));
-
-    // 6. Build the Gap-Free Schedule
+    // 5. Structure Routine Landmarks (Indian Meals & Breaks)
+    // Kickoff Block immediately at start time
     const newlyScheduledBlocks: TimeBlock[] = [];
     let cursorTime = startMinutesTotal;
 
-    fittedTasks.forEach((task, i) => {
-      const dur = allocatedDurations[i];
-      const startH = Math.floor(cursorTime / 60) % 24;
-      const startM = cursorTime % 60;
-      const endTotal = cursorTime + dur;
-      const endH = Math.floor(endTotal / 60) % 24;
-      const endM = endTotal % 60;
+    const isAfternoonStart = startMinutesTotal >= 11 * 60 + 30 && startMinutesTotal <= 14 * 60 + 30;
+    const isMorningStart = startMinutesTotal < 11 * 60 + 30;
 
+    let kickoffDuration = 25;
+    if (isMorningStart) {
+      kickoffDuration = startMinutesTotal <= 8 * 60 ? 30 : 20;
       newlyScheduledBlocks.push({
-        ...task,
-        startTime: `${startH.toString().padStart(2, '0')}:${startM.toString().padStart(2, '0')}`,
-        endTime: `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`,
-        durationMinutes: dur,
-        subtitle: this.cleanSubtitle(task.subtitle),
-        isAdjusted: true
+        id: 'tb_morning_kickoff',
+        startTime: this.formatMinutesToTimeString(cursorTime),
+        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+        title: 'Morning Routine & Movement Kickoff',
+        subtitle: '500ml water kickoff, 10m dynamic stretch & clear desk setup',
+        category: 'routine',
+        durationMinutes: kickoffDuration,
+        isCompleted: false,
+        priority: 'medium'
       });
+    } else if (isAfternoonStart) {
+      kickoffDuration = 25;
+      newlyScheduledBlocks.push({
+        id: 'tb_lunch_kickoff',
+        startTime: this.formatMinutesToTimeString(cursorTime),
+        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+        title: 'Wake-Up Kickoff & Indian Lunch Fuel',
+        subtitle: '500ml water hydration, nutritious Indian lunch, light walk & desk setup',
+        category: 'routine',
+        durationMinutes: kickoffDuration,
+        isCompleted: false,
+        priority: 'medium'
+      });
+    } else {
+      kickoffDuration = 20;
+      newlyScheduledBlocks.push({
+        id: 'tb_wake_kickoff',
+        startTime: this.formatMinutesToTimeString(cursorTime),
+        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+        title: 'Wake-Up Kickoff & Refreshment',
+        subtitle: 'Cold water splash, 500ml hydration, protein snack & desk setup',
+        category: 'routine',
+        durationMinutes: kickoffDuration,
+        isCompleted: false,
+        priority: 'medium'
+      });
+    }
 
-      cursorTime = endTotal;
+    cursorTime += kickoffDuration;
 
-      // Check if an intelligent break was scheduled after this task
-      const plannedBreak = breakMap.get(i);
-      if (plannedBreak) {
-        const breakDur = plannedBreak.durationMinutes;
-        const bStartH = Math.floor(cursorTime / 60) % 24;
-        const bStartM = cursorTime % 60;
-        const bEndTotal = cursorTime + breakDur;
-        const bEndH = Math.floor(bEndTotal / 60) % 24;
-        const bEndM = bEndTotal % 60;
+    // Fixed Indian Landmark Timings (in absolute minutes from midnight)
+    // Breakfast: 08:30 - 09:00 (510 - 540)
+    // Indian Lunch: 13:30 - 14:15 (810 - 855) (if start was before 11:30 AM)
+    // Indian Evening Chai: 17:30 - 17:50 (1050 - 1070)
+    // Indian Dinner: 20:45 - 21:30 (1245 - 1290)
+    // Night Wind-down: 20 min before effectiveBedtimeMinutes
+
+    interface LandmarkMeal {
+      id: string;
+      startMin: number;
+      endMin: number;
+      title: string;
+      subtitle: string;
+      category: 'routine' | 'break';
+    }
+
+    const landmarks: LandmarkMeal[] = [];
+
+    // Morning Breakfast
+    if (startMinutesTotal < 8 * 60) {
+      landmarks.push({
+        id: 'tb_breakfast',
+        startMin: 8 * 60 + 30, // 08:30
+        endMin: 9 * 60,        // 09:00
+        title: 'Wholesome Breakfast & Morning Tea',
+        subtitle: 'Nutritious breakfast, hydration & quick mental pause',
+        category: 'routine'
+      });
+    }
+
+    // Indian Lunch (only if started well before lunch and didn't already have lunch at kickoff)
+    if (startMinutesTotal < 11 * 60 + 30 && effectiveBedtimeMinutes > 14 * 60) {
+      landmarks.push({
+        id: 'tb_lunch_landmark',
+        startMin: 13 * 60 + 30, // 13:30
+        endMin: 14 * 60 + 10,   // 14:10
+        title: 'Mindful Indian Lunch & Mental Reset',
+        subtitle: 'Nutritious Indian meal, screen-off for 25m, light walk',
+        category: 'routine'
+      });
+    }
+
+    // Indian Evening Chai / Refreshment
+    if (cursorTime < 17 * 60 + 30 && effectiveBedtimeMinutes > 18 * 60) {
+      landmarks.push({
+        id: 'tb_chai_landmark',
+        startMin: 17 * 60 + 30, // 17:30
+        endMin: 17 * 60 + 50,   // 17:50
+        title: 'Indian Evening Chai & Stretch Break',
+        subtitle: 'Warm tea/snack, 20-20-20 eye relaxation & posture stretch',
+        category: 'break'
+      });
+    }
+
+    // Indian Dinner & Digestion Walk
+    if (cursorTime < 20 * 60 + 45 && effectiveBedtimeMinutes > 21 * 60 + 30) {
+      landmarks.push({
+        id: 'tb_dinner_landmark',
+        startMin: 20 * 60 + 45, // 20:45
+        endMin: 21 * 60 + 25,   // 21:25
+        title: 'Indian Dinner & Digestion Walk',
+        subtitle: 'Balanced dinner, screen-off relaxation & light 10m digestion stroll',
+        category: 'routine'
+      });
+    }
+
+    // Night Wind-down boundary
+    const windDownStart = effectiveBedtimeMinutes - 20;
+
+    // Filter landmarks that are strictly after cursorTime and before windDownStart
+    const activeLandmarks = landmarks.filter(l => l.startMin > cursorTime && l.endMin <= windDownStart);
+
+    // Slices available time into productive windows between cursorTime, landmarks, and windDownStart
+    interface TimeWindow {
+      startMin: number;
+      endMin: number;
+      duration: number;
+    }
+
+    const windows: TimeWindow[] = [];
+    let currentWindowStart = cursorTime;
+
+    activeLandmarks.forEach(lm => {
+      if (lm.startMin > currentWindowStart + 15) {
+        windows.push({
+          startMin: currentWindowStart,
+          endMin: lm.startMin,
+          duration: lm.startMin - currentWindowStart
+        });
+      }
+      currentWindowStart = lm.endMin;
+    });
+
+    if (windDownStart > currentWindowStart + 15) {
+      windows.push({
+        startMin: currentWindowStart,
+        endMin: windDownStart,
+        duration: windDownStart - currentWindowStart
+      });
+    }
+
+    // Fill each window with high-yield candidate tasks
+    let candidateIndex = 0;
+    let landmarkIndex = 0;
+
+    windows.forEach((win, winIdx) => {
+      let winCursor = win.startMin;
+      let winRemaining = win.duration;
+
+      while (winRemaining >= 35 && candidateIndex < candidateTasks.length) {
+        const task = candidateTasks[candidateIndex];
+        
+        // Determine optimal task duration for this window
+        let targetDur = task.durationMinutes;
+        if (targetDur > winRemaining) {
+          targetDur = winRemaining;
+        }
+
+        // If remaining is very small (e.g. 15-20 min) after this task, expand current task to fill window completely
+        const leftover = winRemaining - targetDur;
+        if (leftover > 0 && leftover < 25) {
+          targetDur += leftover;
+        }
+
+        const taskStartStr = this.formatMinutesToTimeString(winCursor);
+        const taskEndStr = this.formatMinutesToTimeString(winCursor + targetDur);
 
         newlyScheduledBlocks.push({
-          id: `tb_break_after_${task.id}`,
-          startTime: `${bStartH.toString().padStart(2, '0')}:${bStartM.toString().padStart(2, '0')}`,
-          endTime: `${bEndH.toString().padStart(2, '0')}:${bEndM.toString().padStart(2, '0')}`,
-          title: plannedBreak.title,
-          subtitle: plannedBreak.subtitle,
-          category: 'break',
-          durationMinutes: breakDur,
-          isCompleted: false,
-          priority: 'low'
+          ...task,
+          startTime: taskStartStr,
+          endTime: taskEndStr,
+          durationMinutes: targetDur,
+          subtitle: this.cleanSubtitle(task.subtitle),
+          isAdjusted: true
         });
 
-        cursorTime = bEndTotal;
+        winCursor += targetDur;
+        winRemaining -= targetDur;
+        candidateIndex++;
+
+        // Add a crisp 10-15m cognitive reset break between intensive study blocks if enough window time remains
+        if (winRemaining >= 45 && candidateIndex < candidateTasks.length) {
+          const breakDur = winRemaining >= 75 ? 15 : 10;
+          const breakStartStr = this.formatMinutesToTimeString(winCursor);
+          const breakEndStr = this.formatMinutesToTimeString(winCursor + breakDur);
+
+          newlyScheduledBlocks.push({
+            id: `tb_break_${winIdx}_${candidateIndex}`,
+            startTime: breakStartStr,
+            endTime: breakEndStr,
+            title: 'Active Cognitive Break & Hydration Reset',
+            subtitle: '20-20-20 eye scan, hydration refill & standing stretch',
+            category: 'break',
+            durationMinutes: breakDur,
+            isCompleted: false,
+            priority: 'low'
+          });
+
+          winCursor += breakDur;
+          winRemaining -= breakDur;
+        }
+      }
+
+      // If landmark meal comes immediately after this window, insert the landmark block
+      if (landmarkIndex < activeLandmarks.length && activeLandmarks[landmarkIndex].startMin <= win.endMin) {
+        const lm = activeLandmarks[landmarkIndex];
+        newlyScheduledBlocks.push({
+          id: lm.id,
+          startTime: this.formatMinutesToTimeString(lm.startMin),
+          endTime: this.formatMinutesToTimeString(lm.endMin),
+          title: lm.title,
+          subtitle: lm.subtitle,
+          category: lm.category,
+          durationMinutes: lm.endMin - lm.startMin,
+          isCompleted: false,
+          priority: 'medium'
+        });
+        landmarkIndex++;
       }
     });
 
-    // 7. Append EXACTLY ONE Wind-Down Block immediately following cursorTime to sleep deadline
-    const windStartH = Math.floor(cursorTime / 60) % 24;
-    const windStartM = cursorTime % 60;
+    // Append Final Night Wind-Down Block to exact bedtime
+    const windStartH = Math.floor(windDownStart / 60) % 24;
+    const windStartM = windDownStart % 60;
     const windEndH = Math.floor(effectiveBedtimeMinutes / 60) % 24;
     const windEndM = effectiveBedtimeMinutes % 60;
 
@@ -949,24 +935,22 @@ export class PlannerEngine {
       id: 'tb_night_winddown',
       startTime: `${windStartH.toString().padStart(2, '0')}:${windStartM.toString().padStart(2, '0')}`,
       endTime: `${windEndH.toString().padStart(2, '0')}:${windEndM.toString().padStart(2, '0')}`,
-      title: 'Night Wind-Down & Rest Preparation',
-      subtitle: `Screen dimming & reflection · Target bedtime: ${effectiveBedtimeStr}`,
+      title: 'Night Wind-Down & Sleep Preparation',
+      subtitle: `Screen dimming, reflection & desk prep · Target bedtime: ${effectiveBedtimeStr}`,
       category: 'routine',
-      durationMinutes: Math.max(effectiveBedtimeMinutes - cursorTime, 15),
+      durationMinutes: Math.max(effectiveBedtimeMinutes - windDownStart, 15),
       isCompleted: false,
       priority: 'low'
     };
 
-    // Sequential composition: completed tasks in past order, followed by future adapted tasks
+    // Sort timeblocks chronologically
     const finalScheduleBlocks: TimeBlock[] = [
       ...completedBlocks,
       ...newlyScheduledBlocks,
       windDownBlock
     ];
 
-    const startHStr = Math.floor(startMinutesTotal / 60).toString().padStart(2, '0');
-    const startMStr = (startMinutesTotal % 60).toString().padStart(2, '0');
-    const actualStartTimeStr = `${startHStr}:${startMStr}`;
+    const actualStartTimeStr = this.formatMinutesToTimeString(startMinutesTotal);
 
     const scheduledStudyMinutes = finalScheduleBlocks
       .filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision')
@@ -978,17 +962,18 @@ export class PlannerEngine {
       userChosenBedtime: effectiveBedtimeStr,
       recommendedBedtime: recommendedTimeStr,
       isAdaptiveActive: true,
+      dayStartTime: actualStartTimeStr,
+      outputMode,
+      wakeUpProtocol,
       sleepConstraint: {
         targetSleepTime: effectiveBedtimeStr,
         isUserSelected: !!options.userChosenBedtime,
         wakeTimeTomorrow: profile.wakeTime || '07:00'
       },
-      notes: `Adaptive schedule generated for bedtime ${effectiveBedtimeStr}. Available window: ${formatMinutesToHours(grossAvailableMinutes)}.`
+      notes: `High-yield maximum output schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} (${formatMinutesToHours(scheduledStudyMinutes)} study time).`
     };
 
     StorageService.saveDailyPlan(updatedPlan);
-
-    const deferredCount = Math.max(sortedTasks.length - fittedTasks.length, 0);
 
     const report: AdaptiveScheduleReport = {
       originalPlannedMinutes: rawPlan.timeBlocks.reduce((sum, b) => sum + b.durationMinutes, 0),
@@ -997,13 +982,33 @@ export class PlannerEngine {
       adaptiveStartTime: actualStartTimeStr,
       adaptiveBedtime: effectiveBedtimeStr,
       recommendedBedtime: recommendedTimeStr,
-      retainedTasksCount: fittedTasks.length,
-      deferredTasksCount: deferredCount,
-      summaryMessage: `Schedule gap-free optimized from ${actualStartTimeStr} to ${effectiveBedtimeStr} (${formatMinutesToHours(scheduledStudyMinutes)} study time across ${fittedTasks.length} sessions).`,
-      strategyApplied: `Utilized full ${formatMinutesToHours(grossAvailableMinutes)} available window before ${effectiveBedtimeStr}.`,
-      isWorkloadExceeding: deferredCount > 0
+      retainedTasksCount: finalScheduleBlocks.filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision').length,
+      deferredTasksCount: Math.max(candidateTasks.length - candidateIndex, 0),
+      summaryMessage: `Maximum output schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} with ${formatMinutesToHours(scheduledStudyMinutes)} of focused study.`,
+      strategyApplied: `High-yield deep work scheduling with Indian standard meals (Lunch, Chai, Dinner).`,
+      isWorkloadExceeding: candidateTasks.length > candidateIndex
     };
 
     return { updatedPlan, report };
   }
+
+  /**
+   * Adapts the daily schedule using the high-yield maximum output engine.
+   */
+  static adaptDailySchedule(
+    dateStr: string,
+    options: AdaptiveScheduleOptions = {}
+  ): { updatedPlan: DailyPlan; report: AdaptiveScheduleReport } {
+    let startMinutesTotal: number;
+    if (options.startTime) {
+      const [sh, sm] = options.startTime.split(':').map(Number);
+      startMinutesTotal = (sh || 0) * 60 + (sm || 0);
+    } else {
+      const now = new Date();
+      startMinutesTotal = now.getHours() * 60 + Math.ceil(now.getMinutes() / 5) * 5;
+    }
+
+    return this.generateMaximumOutputSchedule(dateStr, startMinutesTotal, options);
+  }
 }
+

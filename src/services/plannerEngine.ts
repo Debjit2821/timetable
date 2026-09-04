@@ -408,14 +408,14 @@ export class PlannerEngine {
   }
 
   /**
-   * Constructs the complete canonical daily workload catalog for today.
-   * Sizes tasks with high-yield, deep-work focus blocks to eliminate wasted time.
+   * Constructs the strict, high-yield daily workload catalog for today.
+   * Day study tasks (Theory, PYQ, DSA, Problem Solving) are prioritized first.
+   * Revisions are strictly positioned for the final night block.
    */
   private static getFullDailyWorkloadCandidates(
     dateStr: string,
-    completedBlocks: TimeBlock[],
-    existingUncompleted: TimeBlock[]
-  ): TimeBlock[] {
+    completedBlocks: TimeBlock[]
+  ): { dayStudyTasks: TimeBlock[]; nightRevisionTask: TimeBlock } {
     const profile = StorageService.getProfile();
     const syllabus = StorageService.getSyllabus();
     const { currentDay, totalDays } = this.getDayNumber(profile.startDate, dateStr);
@@ -426,27 +426,27 @@ export class PlannerEngine {
     const dsaProblems = dsaIds.map(id => dsaBank.find(p => p.id === id)).filter(Boolean);
     const dueRevisions = RevisionEngine.getRevisionsDueOn(dateStr);
 
-    const candidates: TimeBlock[] = [];
+    const dayStudyTasks: TimeBlock[] = [];
     const completedTopicIds = new Set(completedBlocks.map(b => b.topicId).filter(Boolean));
 
     // 1. Topic 1 Core Deep Study Focus (Theory, Proofs & Key Derivations)
     if (targetTopics[0] && !completedTopicIds.has(targetTopics[0].id)) {
-      candidates.push({
+      dayStudyTasks.push({
         id: `tb_gate_${targetTopics[0].id}`,
         startTime: '00:00',
         endTime: '00:00',
         title: `${targetTopics[0].subjectName} — ${targetTopics[0].name}`,
-        subtitle: `Core Concept Mastery & Derivations (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
+        subtitle: `Core Concept Mastery & Key Proofs (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
         category: 'gate',
         topicId: targetTopics[0].id,
         subjectId: targetTopics[0].subjectId,
-        durationMinutes: 90, // High-yield deep study allocation
+        durationMinutes: 120, // Continuous deep focus block
         isCompleted: false,
         priority: 'high'
       });
 
       // 2. Topic 1 Historical PYQ Practice Drill (2000-2025)
-      candidates.push({
+      dayStudyTasks.push({
         id: `tb_pyq_${targetTopics[0].id}`,
         startTime: '00:00',
         endTime: '00:00',
@@ -455,7 +455,7 @@ export class PlannerEngine {
         category: 'gate',
         topicId: targetTopics[0].id,
         subjectId: targetTopics[0].subjectId,
-        durationMinutes: 75, // Rigorous problem solving drill
+        durationMinutes: 80, // High-intensity problem drill
         isCompleted: false,
         priority: 'high'
       });
@@ -465,22 +465,22 @@ export class PlannerEngine {
     const isDsaCompleted = completedBlocks.some(b => b.category === 'dsa');
     if (!isDsaCompleted) {
       const dsaTitles = dsaProblems.map(p => `${p?.title} (${p?.difficulty})`).join(', ');
-      candidates.push({
+      dayStudyTasks.push({
         id: 'tb_dsa_session',
         startTime: '00:00',
         endTime: '00:00',
         title: `Daily DSA Practice (${dsaProblems.length || 3} Problems)`,
         subtitle: dsaTitles || '3 Curated Algorithm Problems',
         category: 'dsa',
-        durationMinutes: 65, // High-efficiency algorithmic problem solving
+        durationMinutes: 60, // Focused algorithm implementation
         isCompleted: false,
         priority: 'high'
       });
     }
 
-    // 4. Topic 2 In-Depth Problem Solving
+    // 4. Topic 2 In-Depth Problem Solving & Study
     if (targetTopics[1] && !completedTopicIds.has(targetTopics[1].id)) {
-      candidates.push({
+      dayStudyTasks.push({
         id: `tb_gate_${targetTopics[1].id}`,
         startTime: '00:00',
         endTime: '00:00',
@@ -489,48 +489,29 @@ export class PlannerEngine {
         category: 'gate',
         topicId: targetTopics[1].id,
         subjectId: targetTopics[1].subjectId,
-        durationMinutes: 80,
+        durationMinutes: 95,
         isCompleted: false,
         priority: 'high'
       });
     }
 
-    // 5. Automated Spaced Revision & Formula Consolidation
-    const isRevisionCompleted = completedBlocks.some(b => b.category === 'revision');
-    if (!isRevisionCompleted) {
-      const revSubtitle = dueRevisions.length > 0
-        ? `Spaced review of: ${dueRevisions.map(r => r.topicName).join(', ')}`
-        : 'Review formula sheets, active recall & error notebook';
-      candidates.push({
-        id: 'tb_revision',
-        startTime: '00:00',
-        endTime: '00:00',
-        title: 'Automated Spaced Revision & Consolidation',
-        subtitle: revSubtitle,
-        category: 'revision',
-        durationMinutes: 40,
-        isCompleted: false,
-        priority: 'high'
-      });
-    }
-
-    // 6. High-Yield Practice / Speed Drill Sprint
-    candidates.push({
+    // 5. High-Yield Practice / Speed Drill Sprint
+    dayStudyTasks.push({
       id: 'tb_high_yield_drill',
       startTime: '00:00',
       endTime: '00:00',
-      title: 'High-Yield Trap Analysis & Speed Drill',
+      title: 'GATE High-Yield Accuracy & Speed Drill',
       subtitle: 'Timer-based MSQ/NAT accuracy calibration & shortcut mastery',
       category: 'gate',
-      durationMinutes: 60,
+      durationMinutes: 75,
       isCompleted: false,
-      priority: 'medium'
+      priority: 'high'
     });
 
-    // 7. WHO Physical Activity & Exercise
+    // 6. WHO Physical Activity & Movement (Optional early evening)
     const isHealthCompleted = completedBlocks.some(b => b.category === 'health');
     if (!isHealthCompleted) {
-      candidates.push({
+      dayStudyTasks.push({
         id: 'tb_exercise',
         startTime: '00:00',
         endTime: '00:00',
@@ -543,28 +524,30 @@ export class PlannerEngine {
       });
     }
 
-    // Merge with any uncompleted tasks already in the plan
-    const merged: TimeBlock[] = [];
-    const seenKeys = new Set<string>();
+    // 7. STRICT END-OF-DAY REVISION (ALWAYS NIGHT ONLY!)
+    const allTopics = syllabus.flatMap(s => s.topics);
+    const completedTopics = allTopics.filter(t => t.status === 'completed');
+    const hasCompletedTopics = completedTopics.length > 0;
 
-    existingUncompleted.forEach(b => {
-      const isRoutineOrMeal = b.category === 'routine' || b.id.startsWith('tb_morning') || b.id.startsWith('tb_lunch') || b.id.startsWith('tb_chai') || b.id.startsWith('tb_dinner');
-      if (isRoutineOrMeal) return; // Will be placed canonically by maximum output generator
+    const revSubtitle = dueRevisions.length > 0
+      ? `Spaced review of: ${dueRevisions.map(r => r.topicName).join(', ')}`
+      : (hasCompletedTopics
+        ? 'Active recall of completed chapters & error notebook'
+        : 'Night consolidation of today’s formulas, proofs & derivations');
 
-      const k = b.topicId || b.dsaProblemId || b.id;
-      seenKeys.add(k);
-      merged.push(b);
-    });
+    const nightRevisionTask: TimeBlock = {
+      id: 'tb_revision',
+      startTime: '00:00',
+      endTime: '00:00',
+      title: 'End-of-Day Spaced Revision & Formula Consolidation',
+      subtitle: revSubtitle,
+      category: 'revision',
+      durationMinutes: 45,
+      isCompleted: false,
+      priority: 'high'
+    };
 
-    candidates.forEach(c => {
-      const k = c.topicId || c.dsaProblemId || c.id;
-      if (!seenKeys.has(k)) {
-        seenKeys.add(k);
-        merged.push(c);
-      }
-    });
-
-    return merged;
+    return { dayStudyTasks, nightRevisionTask };
   }
 
   /**
@@ -610,14 +593,12 @@ export class PlannerEngine {
   }
 
   /**
-   * MAXIMUM OUTPUT SCHEDULING ENGINE WITH INDIAN STANDARD MEAL TIMES:
+   * STRICT MAXIMUM OUTPUT SCHEDULING ENGINE WITH INDIAN STANDARD MEALS:
    * 1. Sets up immediate wake-up kickoff / lunch block (tailored to wake time).
-   * 2. Inserts Indian Standard Meal landmarks:
-   *    - Indian Lunch (01:30 PM – 02:15 PM)
-   *    - Indian Evening Chai (05:30 PM – 05:50 PM)
-   *    - Indian Dinner & Digestion Walk (08:45 PM – 09:30 PM)
-   * 3. Slices available time into productive windows and fills with deep-work focus blocks.
-   * 4. Eliminates wasteful fillers and guarantees 7-8+ hours of high-yield study.
+   * 2. Places continuous, massive deep-work study blocks without spam breaks.
+   * 3. Inserts Indian Landmark Meals at standard times (Lunch 1:30 PM, Chai 5:30 PM, Dinner 8:45 PM).
+   * 4. Places Spaced Revision STRICTLY AT THE END OF THE NIGHT before sleep.
+   * 5. Guarantees 8+ hours of pure, disciplined study.
    */
   static generateMaximumOutputSchedule(
     dateStr: string,
@@ -683,17 +664,14 @@ export class PlannerEngine {
       ...b,
       subtitle: this.cleanSubtitle(b.subtitle)
     }));
-    const existingUncompleted: TimeBlock[] = rawPlan.timeBlocks.filter(b => !b.isCompleted);
 
-    // 4. Retrieve Full Workload Candidates
-    const candidateTasks = this.getFullDailyWorkloadCandidates(
+    // 4. Retrieve Full Workload Candidates (Separating Day Study from Night Revision)
+    const { dayStudyTasks, nightRevisionTask } = this.getFullDailyWorkloadCandidates(
       dateStr,
-      completedBlocks,
-      existingUncompleted
+      completedBlocks
     );
 
     // 5. Structure Routine Landmarks (Indian Meals & Breaks)
-    // Kickoff Block immediately at start time
     const newlyScheduledBlocks: TimeBlock[] = [];
     let cursorTime = startMinutesTotal;
 
@@ -744,13 +722,7 @@ export class PlannerEngine {
 
     cursorTime += kickoffDuration;
 
-    // Fixed Indian Landmark Timings (in absolute minutes from midnight)
-    // Breakfast: 08:30 - 09:00 (510 - 540)
-    // Indian Lunch: 13:30 - 14:15 (810 - 855) (if start was before 11:30 AM)
-    // Indian Evening Chai: 17:30 - 17:50 (1050 - 1070)
-    // Indian Dinner: 20:45 - 21:30 (1245 - 1290)
-    // Night Wind-down: 20 min before effectiveBedtimeMinutes
-
+    // Fixed Indian Landmark Timings
     interface LandmarkMeal {
       id: string;
       startMin: number;
@@ -762,7 +734,7 @@ export class PlannerEngine {
 
     const landmarks: LandmarkMeal[] = [];
 
-    // Morning Breakfast
+    // Morning Breakfast (if waking before 8 AM)
     if (startMinutesTotal < 8 * 60) {
       landmarks.push({
         id: 'tb_breakfast',
@@ -774,7 +746,7 @@ export class PlannerEngine {
       });
     }
 
-    // Indian Lunch (only if started well before lunch and didn't already have lunch at kickoff)
+    // Indian Lunch (only if started before 11:30 AM)
     if (startMinutesTotal < 11 * 60 + 30 && effectiveBedtimeMinutes > 14 * 60) {
       landmarks.push({
         id: 'tb_lunch_landmark',
@@ -786,7 +758,7 @@ export class PlannerEngine {
       });
     }
 
-    // Indian Evening Chai / Refreshment
+    // Indian Evening Chai / Refreshment Break
     if (cursorTime < 17 * 60 + 30 && effectiveBedtimeMinutes > 18 * 60) {
       landmarks.push({
         id: 'tb_chai_landmark',
@@ -810,17 +782,18 @@ export class PlannerEngine {
       });
     }
 
-    // Night Wind-down boundary
+    // Night Wind-down boundary (20 min before bedtime)
     const windDownStart = effectiveBedtimeMinutes - 20;
 
-    // Filter landmarks that are strictly after cursorTime and before windDownStart
+    // Filter landmarks strictly after cursorTime and before windDownStart
     const activeLandmarks = landmarks.filter(l => l.startMin > cursorTime && l.endMin <= windDownStart);
 
-    // Slices available time into productive windows between cursorTime, landmarks, and windDownStart
+    // Structure study windows between cursorTime, landmarks, and windDownStart
     interface TimeWindow {
       startMin: number;
       endMin: number;
       duration: number;
+      isNightWindow: boolean;
     }
 
     const windows: TimeWindow[] = [];
@@ -831,7 +804,8 @@ export class PlannerEngine {
         windows.push({
           startMin: currentWindowStart,
           endMin: lm.startMin,
-          duration: lm.startMin - currentWindowStart
+          duration: lm.startMin - currentWindowStart,
+          isNightWindow: false
         });
       }
       currentWindowStart = lm.endMin;
@@ -841,30 +815,36 @@ export class PlannerEngine {
       windows.push({
         startMin: currentWindowStart,
         endMin: windDownStart,
-        duration: windDownStart - currentWindowStart
+        duration: windDownStart - currentWindowStart,
+        isNightWindow: true
       });
     }
 
-    // Fill each window with high-yield candidate tasks
-    let candidateIndex = 0;
+    // Fill each window with high-yield study tasks strictly without spam breaks!
+    let dayTaskIndex = 0;
     let landmarkIndex = 0;
 
-    windows.forEach((win, winIdx) => {
+    windows.forEach((win) => {
       let winCursor = win.startMin;
       let winRemaining = win.duration;
 
-      while (winRemaining >= 35 && candidateIndex < candidateTasks.length) {
-        const task = candidateTasks[candidateIndex];
+      // In the final night window, reserve the last 40-50m STRICTLY for End-of-Day Revision!
+      const isNight = win.isNightWindow;
+      const revisionDuration = isNight && winRemaining >= 70 ? Math.min(Math.max(Math.round(winRemaining * 0.35), 40), 55) : 0;
+      const availableForStudy = winRemaining - revisionDuration;
+
+      let studyCursorRemaining = availableForStudy;
+
+      while (studyCursorRemaining >= 30 && dayTaskIndex < dayStudyTasks.length) {
+        const task = dayStudyTasks[dayTaskIndex];
         
-        // Determine optimal task duration for this window
         let targetDur = task.durationMinutes;
-        if (targetDur > winRemaining) {
-          targetDur = winRemaining;
+        if (targetDur > studyCursorRemaining) {
+          targetDur = studyCursorRemaining;
         }
 
-        // If remaining is very small (e.g. 15-20 min) after this task, expand current task to fill window completely
-        const leftover = winRemaining - targetDur;
-        if (leftover > 0 && leftover < 25) {
+        const leftover = studyCursorRemaining - targetDur;
+        if (leftover > 0 && leftover < 35) {
           targetDur += leftover;
         }
 
@@ -881,33 +861,29 @@ export class PlannerEngine {
         });
 
         winCursor += targetDur;
-        winRemaining -= targetDur;
-        candidateIndex++;
-
-        // Add a crisp 10-15m cognitive reset break between intensive study blocks if enough window time remains
-        if (winRemaining >= 45 && candidateIndex < candidateTasks.length) {
-          const breakDur = winRemaining >= 75 ? 15 : 10;
-          const breakStartStr = this.formatMinutesToTimeString(winCursor);
-          const breakEndStr = this.formatMinutesToTimeString(winCursor + breakDur);
-
-          newlyScheduledBlocks.push({
-            id: `tb_break_${winIdx}_${candidateIndex}`,
-            startTime: breakStartStr,
-            endTime: breakEndStr,
-            title: 'Active Cognitive Break & Hydration Reset',
-            subtitle: '20-20-20 eye scan, hydration refill & standing stretch',
-            category: 'break',
-            durationMinutes: breakDur,
-            isCompleted: false,
-            priority: 'low'
-          });
-
-          winCursor += breakDur;
-          winRemaining -= breakDur;
-        }
+        studyCursorRemaining -= targetDur;
+        dayTaskIndex++;
       }
 
-      // If landmark meal comes immediately after this window, insert the landmark block
+      // If this is the night window and revision was reserved, place Revision STRICTLY HERE AT THE END!
+      if (isNight && revisionDuration > 0) {
+        const revStartStr = this.formatMinutesToTimeString(winCursor);
+        const revEndStr = this.formatMinutesToTimeString(win.endMin);
+        const actualRevDur = win.endMin - winCursor;
+
+        newlyScheduledBlocks.push({
+          ...nightRevisionTask,
+          startTime: revStartStr,
+          endTime: revEndStr,
+          durationMinutes: actualRevDur,
+          subtitle: this.cleanSubtitle(nightRevisionTask.subtitle),
+          isAdjusted: true
+        });
+
+        winCursor = win.endMin;
+      }
+
+      // Insert Landmark meal immediately following this window if applicable
       if (landmarkIndex < activeLandmarks.length && activeLandmarks[landmarkIndex].startMin <= win.endMin) {
         const lm = activeLandmarks[landmarkIndex];
         newlyScheduledBlocks.push({
@@ -924,6 +900,26 @@ export class PlannerEngine {
         landmarkIndex++;
       }
     });
+
+    // If revision wasn't placed yet (e.g. very short night window), place it before wind-down
+    const hasRevisionPlaced = newlyScheduledBlocks.some(b => b.category === 'revision');
+    if (!hasRevisionPlaced && grossAvailableMinutes >= 120) {
+      const lastStudy = newlyScheduledBlocks[newlyScheduledBlocks.length - 1];
+      if (lastStudy && lastStudy.durationMinutes > 60) {
+        lastStudy.durationMinutes -= 40;
+        const [lsh, lsm] = lastStudy.startTime.split(':').map(Number);
+        const newEndMin = (lsh * 60 + lsm) + lastStudy.durationMinutes;
+        lastStudy.endTime = this.formatMinutesToTimeString(newEndMin);
+
+        newlyScheduledBlocks.push({
+          ...nightRevisionTask,
+          startTime: this.formatMinutesToTimeString(newEndMin),
+          endTime: this.formatMinutesToTimeString(windDownStart),
+          durationMinutes: windDownStart - newEndMin,
+          isAdjusted: true
+        });
+      }
+    }
 
     // Append Final Night Wind-Down Block to exact bedtime
     const windStartH = Math.floor(windDownStart / 60) % 24;
@@ -970,7 +966,7 @@ export class PlannerEngine {
         isUserSelected: !!options.userChosenBedtime,
         wakeTimeTomorrow: profile.wakeTime || '07:00'
       },
-      notes: `High-yield maximum output schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} (${formatMinutesToHours(scheduledStudyMinutes)} study time).`
+      notes: `Strict maximum output schedule from ${actualStartTimeStr} to ${effectiveBedtimeStr} (${formatMinutesToHours(scheduledStudyMinutes)} study time).`
     };
 
     StorageService.saveDailyPlan(updatedPlan);
@@ -983,17 +979,17 @@ export class PlannerEngine {
       adaptiveBedtime: effectiveBedtimeStr,
       recommendedBedtime: recommendedTimeStr,
       retainedTasksCount: finalScheduleBlocks.filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision').length,
-      deferredTasksCount: Math.max(candidateTasks.length - candidateIndex, 0),
-      summaryMessage: `Maximum output schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} with ${formatMinutesToHours(scheduledStudyMinutes)} of focused study.`,
-      strategyApplied: `High-yield deep work scheduling with Indian standard meals (Lunch, Chai, Dinner).`,
-      isWorkloadExceeding: candidateTasks.length > candidateIndex
+      deferredTasksCount: Math.max(dayStudyTasks.length - dayTaskIndex, 0),
+      summaryMessage: `Strict schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} with ${formatMinutesToHours(scheduledStudyMinutes)} of focused study.`,
+      strategyApplied: `Continuous deep focus blocks with Indian standard meals and night-only revision.`,
+      isWorkloadExceeding: dayStudyTasks.length > dayTaskIndex
     };
 
     return { updatedPlan, report };
   }
 
   /**
-   * Adapts the daily schedule using the high-yield maximum output engine.
+   * Adapts the daily schedule using the strict high-yield maximum output engine.
    */
   static adaptDailySchedule(
     dateStr: string,
@@ -1011,4 +1007,5 @@ export class PlannerEngine {
     return this.generateMaximumOutputSchedule(dateStr, startMinutesTotal, options);
   }
 }
+
 

@@ -19,7 +19,7 @@ import { PlannerEngine } from '../../services/plannerEngine';
 interface TopicChapterTrackerProps {
   syllabus: Subject[];
   plan: DailyPlan;
-  onToggleChapter: (topicId: string, chapterName: string) => void;
+  onToggleChapter?: (topicId: string, chapterName: string) => void;
 }
 
 export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
@@ -160,7 +160,7 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
                       return (
                         <label
                           key={idx}
-                          onClick={() => onToggleChapter(topic.id, chapterName)}
+                          onClick={() => onToggleChapter && onToggleChapter(topic.id, chapterName)}
                           className={`p-2.5 rounded-md border flex items-start gap-2.5 cursor-pointer text-xs transition-all ${
                             isChapterCompleted
                               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
@@ -261,7 +261,7 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
                       return (
                         <label
                           key={idx}
-                          onClick={() => onToggleChapter(topic.id, chapterName)}
+                          onClick={() => onToggleChapter && onToggleChapter(topic.id, chapterName)}
                           className={`p-2 rounded border flex items-start gap-2 cursor-pointer text-xs transition-all ${
                             isChapterCompleted
                               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'

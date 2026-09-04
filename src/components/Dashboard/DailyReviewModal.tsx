@@ -108,10 +108,10 @@ export const DailyReviewModal: React.FC<DailyReviewModalProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-primary font-heading flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-accent" />
-                <span>Today's Topic & Chapter Checklist:</span>
+                <span>Today's Subtopic & Learning Tasks Checklist:</span>
               </span>
               <span className="text-[11px] font-mono text-tertiary">
-                Click to tick finished
+                Click to tick completed
               </span>
             </div>
 
@@ -128,7 +128,7 @@ export const DailyReviewModal: React.FC<DailyReviewModalProps> = ({
                         <span className="text-xs font-bold text-primary truncate">{topic.name}</span>
                       </div>
                       <span className="text-[11px] font-mono text-emerald-400 font-semibold shrink-0">
-                        {breakdown.completed.length}/{breakdown.total} done ({breakdown.percent}%)
+                        {breakdown.completed.length}/{breakdown.total} subtopics done ({breakdown.percent}%)
                       </span>
                     </div>
 
@@ -136,20 +136,20 @@ export const DailyReviewModal: React.FC<DailyReviewModalProps> = ({
                       {chapters.map((ch, i) => {
                         const isDone = (topic.completedTasks || []).includes(ch);
                         return (
-                          <label
+                          <div
                             key={i}
                             onClick={() => onToggleChapter && onToggleChapter(topic.id, ch)}
-                            className={`p-2 rounded border flex items-start gap-2 cursor-pointer text-xs transition-all ${
+                            className={`p-2 rounded border flex items-start gap-2.5 cursor-pointer text-xs transition-all ${
                               isDone
-                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                                : 'bg-subtle border-subtle text-secondary hover:text-primary'
+                                ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
+                                : 'bg-[#0d101c] border-subtle text-secondary hover:text-primary hover:border-indigo-500/30'
                             }`}
                           >
                             <div className={`check-circle mt-0.5 shrink-0 ${isDone ? 'checked' : ''}`}>
                               {isDone && <Check className="w-3 h-3" />}
                             </div>
                             <span className={isDone ? 'line-through text-emerald-300/90' : ''}>{ch}</span>
-                          </label>
+                          </div>
                         );
                       })}
                     </div>
@@ -162,7 +162,7 @@ export const DailyReviewModal: React.FC<DailyReviewModalProps> = ({
 
         <div className="p-3.5 rounded-md bg-subtle border border-subtle text-xs text-secondary mb-5 leading-relaxed">
           <strong className="text-primary">Scheduler Note: </strong>
-          Any uncompleted chapters will automatically be carried over and prioritized in tomorrow's plan. Rest well tonight ({profile.bedTime}) to consolidate memory schemas.
+          Any uncompleted subtopics will automatically be tracked in the background and scheduled until completely finished. Rest well tonight ({profile.bedTime}) to consolidate memory schemas.
         </div>
 
         {/* Actions */}

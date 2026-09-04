@@ -86,21 +86,21 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-primary font-heading tracking-tight">
-                Topic & Chapter Completion Tracker
+                Subtopic & Task Progress Tracker
               </h2>
               <span className="pill pill-indigo text-[11px] font-mono font-medium">
                 Auto-Rescheduling Active
               </span>
             </div>
             <p className="text-xs text-secondary mt-0.5">
-              Tick chapters you completed today. The scheduler takes note of any unfinished chapters and automatically reschedules them so you never miss a topic.
+              Tick any subtopic you completed today (e.g. Ratios, Percentages). The scheduler tracks unfinished subtopics in the background so nothing ever gets missed out.
             </p>
           </div>
         </div>
 
-        {/* Global Chapter Progress Metric */}
+        {/* Global Subtopic Progress Metric */}
         <div className="flex items-center gap-2 self-start sm:self-center font-mono text-xs text-secondary shrink-0">
-          <span className="text-tertiary">Chapters Done:</span>
+          <span className="text-tertiary">Subtopics Done:</span>
           <span className="text-emerald-400 font-bold">{completedChaptersCount} / {totalChaptersCount}</span>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
         <div className="space-y-2.5">
           <div className="text-[11.5px] font-mono uppercase tracking-wider text-accent font-bold flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Today's Target & In-Progress Chapters:</span>
+            <span>Today's Target & In-Progress Topics:</span>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
@@ -136,7 +136,7 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
                         <span className="pill pill-emerald text-[11px] font-medium">✓ Topic Mastered (100%)</span>
                       ) : (
                         <span className="pill pill-indigo text-[11px] font-medium">
-                          {breakdown.completed.length}/{breakdown.total} chapters ({breakdown.percent}%)
+                          {breakdown.completed.length}/{breakdown.total} subtopics ({breakdown.percent}%)
                         </span>
                       )}
                     </div>
@@ -146,7 +146,7 @@ export const TopicChapterTracker: React.FC<TopicChapterTrackerProps> = ({
                         <span className="text-emerald-400 font-medium">Ready for Spaced Revision</span>
                       ) : (
                         <span className="text-amber-300 font-medium">
-                          {breakdown.remaining.length} chapter{breakdown.remaining.length > 1 ? 's' : ''} left
+                          {breakdown.remaining.length} subtopic{breakdown.remaining.length > 1 ? 's' : ''} remaining
                         </span>
                       )}
                     </div>

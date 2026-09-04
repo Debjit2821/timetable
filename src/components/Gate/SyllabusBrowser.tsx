@@ -184,8 +184,8 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                                 <span className="pill pill-indigo text-[11px] font-medium">Rev #{topic.revisionLevel}</span>
                               )}
                               {completedTasksList.length > 0 && !isDone && (
-                                <span className="pill pill-indigo text-[11px] font-mono font-medium">
-                                  {completedTasksList.length}/{studyTasks.length} chapters done
+                                <span className="pill text-[11px] font-mono border-indigo-500/40 text-indigo-300 bg-indigo-950/40 font-medium">
+                                  {completedTasksList.length}/{studyTasks.length} subtopics ({Math.round((completedTasksList.length / Math.max(studyTasks.length, 1)) * 100)}%)
                                 </span>
                               )}
                             </div>
@@ -193,7 +193,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                             <div className="flex items-center gap-3 text-xs text-secondary mt-0.5">
                               <span>{formatMinutesToHours(topic.estimatedMinutes)}</span>
                               <span>·</span>
-                              <span>{studyTasks.length} chapters</span>
+                              <span>{studyTasks.length} subtopics</span>
                               <span>·</span>
                               <span>PYQs: <strong className="text-primary font-medium">{topic.pyqSolved}/{topic.pyqTotal}</strong></span>
                             </div>
@@ -208,17 +208,17 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                               isDone ? 'not_started' : 'completed',
                               isDone ? 0 : topic.pyqTotal
                             )}
-                            className={`btn-ghost text-xs px-2.5 py-1 font-medium ${isDone ? 'text-emerald-400 bg-emerald-500/15' : 'text-secondary'}`}
+                            className={`btn-ghost text-xs px-2.5 py-1 font-medium ${isDone ? 'text-emerald-400 bg-emerald-500/15 border border-emerald-500/30' : 'text-secondary'}`}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            <span>{isDone ? 'Done' : 'Mark Topic Done'}</span>
+                            <span>{isDone ? 'Topic Mastered' : 'Mark All Done'}</span>
                           </button>
                         </div>
                       </div>
 
                       {/* Expandable Section: Official Syllabus Text vs GatePlanner Study Breakdown */}
                       {isExpanded && (
-                        <div className="mt-3 pt-3 border-t border-subtle pl-6 space-y-3 text-xs">
+                        <div className="mt-3 pt-3 border-t border-subtle pl-2 sm:pl-6 space-y-3.5 text-xs">
                           {/* 1. Faithful Official GATE 2027 Text */}
                           {topic.officialSyllabusText && (
                             <div className="p-3 rounded-md bg-[#090a0f] border border-subtle text-secondary">
@@ -232,15 +232,15 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                             </div>
                           )}
 
-                          {/* 2. GatePlanner Structured Study Breakdown with Chapter Checkboxes */}
+                          {/* 2. GatePlanner Structured Study Breakdown with Subtopic Checkboxes */}
                           <div>
-                            <div className="text-[11.5px] uppercase font-mono text-tertiary tracking-wider mb-1.5 flex items-center justify-between font-semibold">
-                              <div className="flex items-center gap-1.5">
-                                <Layers className="w-3.5 h-3.5" />
-                                <span>Chapters & Learning Tasks (Click to tick completed):</span>
+                            <div className="text-[11.5px] uppercase font-mono text-tertiary tracking-wider mb-2 flex items-center justify-between font-semibold">
+                              <div className="flex items-center gap-1.5 text-primary">
+                                <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                                <span>GatePlanner Study Breakdown (Click any subtopic to tick done):</span>
                               </div>
-                              <span className="text-[11px] text-emerald-400 font-mono">
-                                {completedTasksList.length}/{studyTasks.length} Completed
+                              <span className="text-[11px] text-emerald-400 font-mono font-bold">
+                                {completedTasksList.length}/{studyTasks.length} Subtopics Done
                               </span>
                             </div>
 
@@ -249,22 +249,22 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                                 const isChapterDone = completedTasksList.includes(st);
 
                                 return (
-                                  <label
+                                  <div
                                     key={i}
                                     onClick={() => onToggleChapter && onToggleChapter(topic.id, st)}
-                                    className={`flex items-start gap-2.5 p-2 rounded-md border cursor-pointer transition-all ${
+                                    className={`flex items-start gap-3 p-2.5 rounded-md border cursor-pointer select-none transition-all ${
                                       isChapterDone 
-                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-                                        : 'bg-subtle border-subtle text-secondary hover:text-primary hover:border-indigo-500/30'
+                                        ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-200' 
+                                        : 'bg-[#0b0e18] border-subtle text-secondary hover:text-primary hover:border-indigo-500/40 hover:bg-[#111624]'
                                     }`}
                                   >
-                                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChapterDone ? 'bg-emerald-500 border-emerald-500' : 'border-tertiary'}`}>
-                                      {isChapterDone && <Check className="w-3 h-3 text-white" />}
+                                    <div className={`check-circle mt-0.5 shrink-0 ${isChapterDone ? 'checked' : ''}`}>
+                                      {isChapterDone && <Check className="w-3.5 h-3.5" />}
                                     </div>
-                                    <span className={isChapterDone ? 'text-emerald-300/90 font-medium' : 'font-normal'}>
+                                    <span className={`text-xs ${isChapterDone ? 'line-through text-emerald-300/90 font-medium' : 'font-normal'}`}>
                                       {st}
                                     </span>
-                                  </label>
+                                  </div>
                                 );
                               })}
                             </div>

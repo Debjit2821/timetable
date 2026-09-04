@@ -569,8 +569,8 @@ export class PlannerEngine {
       const isCarryover = t1Breakdown.completed.length > 0 && t1Breakdown.remaining.length > 0;
       
       const t1Subtitle = isCarryover
-        ? `Carryover chapters (${t1Breakdown.completed.length}/${t1Breakdown.total} done): ${t1Breakdown.remaining.slice(0, 2).join(', ')}`
-        : `Core Concept Mastery & Proofs (${t1Breakdown.remaining.slice(0, 2).join(', ') || 'Key Concepts'})`;
+        ? `Concept mastery & problem solving · In Progress (${t1Breakdown.completed.length}/${t1Breakdown.total} done)`
+        : 'Core concept mastery, proofs & key derivations';
 
       if (!completedBlockIds.has(topic1GateId)) {
         dayStudyTasks.push({
@@ -630,8 +630,8 @@ export class PlannerEngine {
       const isCarryover2 = t2Breakdown.completed.length > 0 && t2Breakdown.remaining.length > 0;
       
       const t2Subtitle = isCarryover2
-        ? `Pending chapters (${t2Breakdown.completed.length}/${t2Breakdown.total} done): ${t2Breakdown.remaining.slice(0, 2).join(', ')}`
-        : `In-depth concepts & problem solving (${t2Breakdown.remaining.slice(0, 2).join(', ') || 'Practice'})`;
+        ? `In-depth problem solving · In Progress (${t2Breakdown.completed.length}/${t2Breakdown.total} done)`
+        : 'In-depth concepts & problem solving';
 
       if (!completedBlockIds.has(topic2GateId)) {
         dayStudyTasks.push({

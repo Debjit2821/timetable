@@ -398,7 +398,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <TopicChapterTracker
           syllabus={syllabus}
           plan={plan}
-          onToggleChapter={onToggleChapter}
+          onToggleChapter={onToggleChapter || (() => {})}
         />
       </section>
 

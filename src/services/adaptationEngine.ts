@@ -147,7 +147,8 @@ export class AdaptationEngine {
 
     const { updatedPlan } = PlannerEngine.adaptDailySchedule(plan.date, {
       startTime: startTimeStr,
-      userChosenBedtime: plan.userChosenBedtime
+      userChosenBedtime: plan.userChosenBedtime,
+      isWakeUp: false
     });
 
     return updatedPlan;

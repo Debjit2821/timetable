@@ -236,6 +236,7 @@ export interface AdaptiveScheduleOptions {
   userChosenBedtime?: string;      // Explicit user selected bedtime (e.g. "00:30")
   targetSleepHours?: number;        // default 7.5h
   outputMode?: 'maximum' | 'balanced' | 'accelerated';
+  isWakeUp?: boolean;              // true if this is an explicit wake-up routine setup, false for mid-day adaptation
 }
 
 export interface AdaptiveScheduleReport {

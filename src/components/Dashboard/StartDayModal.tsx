@@ -77,7 +77,8 @@ export const StartDayModal: React.FC<StartDayModalProps> = ({
     onApplySchedule({
       startTime: selectedWakeTime,
       userChosenBedtime: activeBedtime,
-      outputMode
+      outputMode,
+      isWakeUp: true
     });
     onClose();
   };

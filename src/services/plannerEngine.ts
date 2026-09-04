@@ -138,23 +138,59 @@ export class PlannerEngine {
   }
 
   /**
-   * Cleans corrupted or duplicated sleep/wind-down blocks from any stored plan.
+   * Cleans corrupted or duplicated sleep/wind-down or duplicate kickoff blocks from any stored plan.
    */
   static sanitizePlan(plan: DailyPlan): DailyPlan {
     const profile = StorageService.getProfile();
     const seenIds = new Set<string>();
     const cleanedBlocks: TimeBlock[] = [];
 
+    const isKickoffBlock = (b: TimeBlock) =>
+      b.id.includes('kickoff') ||
+      b.id.includes('morning_routine') ||
+      b.title.toLowerCase().includes('kickoff') ||
+      b.title.toLowerCase().includes('wake-up');
+
+    // Check if there is already a completed kickoff block
+    const hasCompletedKickoff = plan.timeBlocks.some(b => b.isCompleted && isKickoffBlock(b));
+    let hasKeptUncompletedKickoff = false;
+
     plan.timeBlocks.forEach(b => {
       const cleanSub = this.cleanSubtitle(b.subtitle);
-      const isSleepOrWindDown = b.id.startsWith('tb_sleep') || b.id.startsWith('tb_adaptive_winddown') || b.id.startsWith('tb_night_winddown') || b.title.includes('Sleep Target') || b.title.includes('Night Wind-Down');
+      const isSleepOrWindDown =
+        b.id.startsWith('tb_sleep') ||
+        b.id.startsWith('tb_adaptive_winddown') ||
+        b.id.startsWith('tb_night_winddown') ||
+        b.title.includes('Sleep Target') ||
+        b.title.includes('Night Wind-Down');
 
       if (isSleepOrWindDown) {
         return; // Will be added as a single canonical winddown at the very end
       }
 
-      const canonicalKey = b.topicId || b.dsaProblemId || b.id;
-      if (!seenIds.has(canonicalKey) || b.isCompleted) {
+      // If this is a kickoff block
+      if (isKickoffBlock(b)) {
+        if (b.isCompleted) {
+          if (!seenIds.has(b.id)) {
+            seenIds.add(b.id);
+            cleanedBlocks.push({ ...b, subtitle: cleanSub });
+          }
+          return;
+        } else {
+          // If uncompleted and we already completed a kickoff earlier, discard stray duplicate
+          if (hasCompletedKickoff) {
+            return;
+          }
+          // Only keep at most one uncompleted kickoff block
+          if (hasKeptUncompletedKickoff) {
+            return;
+          }
+          hasKeptUncompletedKickoff = true;
+        }
+      }
+
+      const canonicalKey = b.id;
+      if (!seenIds.has(canonicalKey)) {
         seenIds.add(canonicalKey);
         cleanedBlocks.push({
           ...b,
@@ -182,6 +218,13 @@ export class PlannerEngine {
       durationMinutes: 20,
       isCompleted: false,
       priority: 'low'
+    });
+
+    // Sort timeblocks chronologically
+    cleanedBlocks.sort((a, b) => {
+      const [ah, am] = a.startTime.split(':').map(Number);
+      const [bh, bm] = b.startTime.split(':').map(Number);
+      return ((ah || 0) * 60 + (am || 0)) - ((bh || 0) * 60 + (bm || 0));
     });
 
     return {
@@ -427,38 +470,45 @@ export class PlannerEngine {
     const dueRevisions = RevisionEngine.getRevisionsDueOn(dateStr);
 
     const dayStudyTasks: TimeBlock[] = [];
-    const completedTopicIds = new Set(completedBlocks.map(b => b.topicId).filter(Boolean));
+    const completedBlockIds = new Set(completedBlocks.map(b => b.id));
 
     // 1. Topic 1 Core Deep Study Focus (Theory, Proofs & Key Derivations)
-    if (targetTopics[0] && !completedTopicIds.has(targetTopics[0].id)) {
-      dayStudyTasks.push({
-        id: `tb_gate_${targetTopics[0].id}`,
-        startTime: '00:00',
-        endTime: '00:00',
-        title: `${targetTopics[0].subjectName} — ${targetTopics[0].name}`,
-        subtitle: `Core Concept Mastery & Key Proofs (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
-        category: 'gate',
-        topicId: targetTopics[0].id,
-        subjectId: targetTopics[0].subjectId,
-        durationMinutes: 120, // Continuous deep focus block
-        isCompleted: false,
-        priority: 'high'
-      });
+    if (targetTopics[0]) {
+      const topic1GateId = `tb_gate_${targetTopics[0].id}`;
+      const topic1PyqId = `tb_pyq_${targetTopics[0].id}`;
+
+      if (!completedBlockIds.has(topic1GateId)) {
+        dayStudyTasks.push({
+          id: topic1GateId,
+          startTime: '00:00',
+          endTime: '00:00',
+          title: `${targetTopics[0].subjectName} — ${targetTopics[0].name}`,
+          subtitle: `Core Concept Mastery & Key Proofs (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
+          category: 'gate',
+          topicId: targetTopics[0].id,
+          subjectId: targetTopics[0].subjectId,
+          durationMinutes: 120, // Continuous deep focus block
+          isCompleted: false,
+          priority: 'high'
+        });
+      }
 
       // 2. Topic 1 Historical PYQ Practice Drill (2000-2025)
-      dayStudyTasks.push({
-        id: `tb_pyq_${targetTopics[0].id}`,
-        startTime: '00:00',
-        endTime: '00:00',
-        title: `GATE PYQ Drill (2000-2025) — ${targetTopics[0].name}`,
-        subtitle: 'Solve verified historical GATE conceptual problems & trap analysis',
-        category: 'gate',
-        topicId: targetTopics[0].id,
-        subjectId: targetTopics[0].subjectId,
-        durationMinutes: 80, // High-intensity problem drill
-        isCompleted: false,
-        priority: 'high'
-      });
+      if (!completedBlockIds.has(topic1PyqId)) {
+        dayStudyTasks.push({
+          id: topic1PyqId,
+          startTime: '00:00',
+          endTime: '00:00',
+          title: `GATE PYQ Drill (2000-2025) — ${targetTopics[0].name}`,
+          subtitle: 'Solve verified historical GATE conceptual problems & trap analysis',
+          category: 'gate',
+          topicId: targetTopics[0].id,
+          subjectId: targetTopics[0].subjectId,
+          durationMinutes: 80, // High-intensity problem drill
+          isCompleted: false,
+          priority: 'high'
+        });
+      }
     }
 
     // 3. Daily DSA Practice Session (3 Curated Problems)
@@ -479,37 +529,42 @@ export class PlannerEngine {
     }
 
     // 4. Topic 2 In-Depth Problem Solving & Study
-    if (targetTopics[1] && !completedTopicIds.has(targetTopics[1].id)) {
+    if (targetTopics[1]) {
+      const topic2GateId = `tb_gate_${targetTopics[1].id}`;
+      if (!completedBlockIds.has(topic2GateId)) {
+        dayStudyTasks.push({
+          id: topic2GateId,
+          startTime: '00:00',
+          endTime: '00:00',
+          title: `${targetTopics[1].subjectName} — ${targetTopics[1].name}`,
+          subtitle: `In-depth concepts & problem solving`,
+          category: 'gate',
+          topicId: targetTopics[1].id,
+          subjectId: targetTopics[1].subjectId,
+          durationMinutes: 95,
+          isCompleted: false,
+          priority: 'high'
+        });
+      }
+    }
+
+    // 5. High-Yield Practice / Speed Drill Sprint
+    if (!completedBlockIds.has('tb_high_yield_drill')) {
       dayStudyTasks.push({
-        id: `tb_gate_${targetTopics[1].id}`,
+        id: 'tb_high_yield_drill',
         startTime: '00:00',
         endTime: '00:00',
-        title: `${targetTopics[1].subjectName} — ${targetTopics[1].name}`,
-        subtitle: `In-depth concepts & problem solving`,
+        title: 'GATE High-Yield Accuracy & Speed Drill',
+        subtitle: 'Timer-based MSQ/NAT accuracy calibration & shortcut mastery',
         category: 'gate',
-        topicId: targetTopics[1].id,
-        subjectId: targetTopics[1].subjectId,
-        durationMinutes: 95,
+        durationMinutes: 75,
         isCompleted: false,
         priority: 'high'
       });
     }
 
-    // 5. High-Yield Practice / Speed Drill Sprint
-    dayStudyTasks.push({
-      id: 'tb_high_yield_drill',
-      startTime: '00:00',
-      endTime: '00:00',
-      title: 'GATE High-Yield Accuracy & Speed Drill',
-      subtitle: 'Timer-based MSQ/NAT accuracy calibration & shortcut mastery',
-      category: 'gate',
-      durationMinutes: 75,
-      isCompleted: false,
-      priority: 'high'
-    });
-
     // 6. WHO Physical Activity & Movement (Optional early evening)
-    const isHealthCompleted = completedBlocks.some(b => b.category === 'health');
+    const isHealthCompleted = completedBlocks.some(b => b.category === 'health' || b.id === 'tb_exercise');
     if (!isHealthCompleted) {
       dayStudyTasks.push({
         id: 'tb_exercise',
@@ -665,6 +720,25 @@ export class PlannerEngine {
       subtitle: this.cleanSubtitle(b.subtitle)
     }));
 
+    const completedBlockIds = new Set(completedBlocks.map(b => b.id));
+
+    const isKickoffBlock = (b: TimeBlock) =>
+      b.id.includes('kickoff') ||
+      b.id.includes('morning_routine') ||
+      b.title.toLowerCase().includes('kickoff') ||
+      b.title.toLowerCase().includes('wake-up');
+
+    const hasCompletedKickoff = completedBlocks.some(isKickoffBlock);
+    const hasAnyCompletedTasks = completedBlocks.length > 0;
+
+    // A kickoff block should ONLY be generated if:
+    // 1. Explicitly requested as a wake-up schedule (options.isWakeUp === true), OR fresh schedule with no completed tasks
+    // AND 2. The user has not already completed a kickoff block
+    const shouldIncludeKickoff =
+      !hasCompletedKickoff &&
+      (options.isWakeUp === true ||
+        (options.isWakeUp === undefined && !hasAnyCompletedTasks && startMinutesTotal <= 10 * 60));
+
     // 4. Retrieve Full Workload Candidates (Separating Day Study from Night Revision)
     const { dayStudyTasks, nightRevisionTask } = this.getFullDailyWorkloadCandidates(
       dateStr,
@@ -678,49 +752,51 @@ export class PlannerEngine {
     const isAfternoonStart = startMinutesTotal >= 11 * 60 + 30 && startMinutesTotal <= 14 * 60 + 30;
     const isMorningStart = startMinutesTotal < 11 * 60 + 30;
 
-    let kickoffDuration = 25;
-    if (isMorningStart) {
-      kickoffDuration = startMinutesTotal <= 8 * 60 ? 30 : 20;
-      newlyScheduledBlocks.push({
-        id: 'tb_morning_kickoff',
-        startTime: this.formatMinutesToTimeString(cursorTime),
-        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
-        title: 'Morning Routine & Movement Kickoff',
-        subtitle: '500ml water kickoff, 10m dynamic stretch & clear desk setup',
-        category: 'routine',
-        durationMinutes: kickoffDuration,
-        isCompleted: false,
-        priority: 'medium'
-      });
-    } else if (isAfternoonStart) {
-      kickoffDuration = 25;
-      newlyScheduledBlocks.push({
-        id: 'tb_lunch_kickoff',
-        startTime: this.formatMinutesToTimeString(cursorTime),
-        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
-        title: 'Wake-Up Kickoff & Indian Lunch Fuel',
-        subtitle: '500ml water hydration, nutritious Indian lunch, light walk & desk setup',
-        category: 'routine',
-        durationMinutes: kickoffDuration,
-        isCompleted: false,
-        priority: 'medium'
-      });
-    } else {
-      kickoffDuration = 20;
-      newlyScheduledBlocks.push({
-        id: 'tb_wake_kickoff',
-        startTime: this.formatMinutesToTimeString(cursorTime),
-        endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
-        title: 'Wake-Up Kickoff & Refreshment',
-        subtitle: 'Cold water splash, 500ml hydration, protein snack & desk setup',
-        category: 'routine',
-        durationMinutes: kickoffDuration,
-        isCompleted: false,
-        priority: 'medium'
-      });
-    }
+    if (shouldIncludeKickoff) {
+      let kickoffDuration = 25;
+      if (isMorningStart) {
+        kickoffDuration = startMinutesTotal <= 8 * 60 ? 30 : 20;
+        newlyScheduledBlocks.push({
+          id: 'tb_morning_kickoff',
+          startTime: this.formatMinutesToTimeString(cursorTime),
+          endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+          title: 'Morning Routine & Movement Kickoff',
+          subtitle: '500ml water kickoff, 10m dynamic stretch & clear desk setup',
+          category: 'routine',
+          durationMinutes: kickoffDuration,
+          isCompleted: false,
+          priority: 'medium'
+        });
+      } else if (isAfternoonStart) {
+        kickoffDuration = 25;
+        newlyScheduledBlocks.push({
+          id: 'tb_lunch_kickoff',
+          startTime: this.formatMinutesToTimeString(cursorTime),
+          endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+          title: 'Wake-Up Kickoff & Indian Lunch Fuel',
+          subtitle: '500ml water hydration, nutritious Indian lunch, light walk & desk setup',
+          category: 'routine',
+          durationMinutes: kickoffDuration,
+          isCompleted: false,
+          priority: 'medium'
+        });
+      } else {
+        kickoffDuration = 20;
+        newlyScheduledBlocks.push({
+          id: 'tb_wake_kickoff',
+          startTime: this.formatMinutesToTimeString(cursorTime),
+          endTime: this.formatMinutesToTimeString(cursorTime + kickoffDuration),
+          title: 'Wake-Up Kickoff & Refreshment',
+          subtitle: 'Cold water splash, 500ml hydration, protein snack & desk setup',
+          category: 'routine',
+          durationMinutes: kickoffDuration,
+          isCompleted: false,
+          priority: 'medium'
+        });
+      }
 
-    cursorTime += kickoffDuration;
+      cursorTime += kickoffDuration;
+    }
 
     // Fixed Indian Landmark Timings
     interface LandmarkMeal {
@@ -734,8 +810,8 @@ export class PlannerEngine {
 
     const landmarks: LandmarkMeal[] = [];
 
-    // Morning Breakfast (if waking before 8 AM)
-    if (startMinutesTotal < 8 * 60) {
+    // Morning Breakfast (if waking before 8 AM and not already completed)
+    if (startMinutesTotal < 8 * 60 && !completedBlockIds.has('tb_breakfast')) {
       landmarks.push({
         id: 'tb_breakfast',
         startMin: 8 * 60 + 30, // 08:30
@@ -746,8 +822,8 @@ export class PlannerEngine {
       });
     }
 
-    // Indian Lunch (only if started before 11:30 AM)
-    if (startMinutesTotal < 11 * 60 + 30 && effectiveBedtimeMinutes > 14 * 60) {
+    // Indian Lunch (only if started before 11:30 AM and not already completed)
+    if (startMinutesTotal < 11 * 60 + 30 && effectiveBedtimeMinutes > 14 * 60 && !completedBlockIds.has('tb_lunch_landmark')) {
       landmarks.push({
         id: 'tb_lunch_landmark',
         startMin: 13 * 60 + 30, // 13:30
@@ -758,8 +834,8 @@ export class PlannerEngine {
       });
     }
 
-    // Indian Evening Chai / Refreshment Break
-    if (cursorTime < 17 * 60 + 30 && effectiveBedtimeMinutes > 18 * 60) {
+    // Indian Evening Chai / Refreshment Break (if not already completed)
+    if (cursorTime < 17 * 60 + 30 && effectiveBedtimeMinutes > 18 * 60 && !completedBlockIds.has('tb_chai_landmark')) {
       landmarks.push({
         id: 'tb_chai_landmark',
         startMin: 17 * 60 + 30, // 17:30
@@ -770,8 +846,8 @@ export class PlannerEngine {
       });
     }
 
-    // Indian Dinner & Digestion Walk
-    if (cursorTime < 20 * 60 + 45 && effectiveBedtimeMinutes > 21 * 60 + 30) {
+    // Indian Dinner & Digestion Walk (if not already completed)
+    if (cursorTime < 20 * 60 + 45 && effectiveBedtimeMinutes > 21 * 60 + 30 && !completedBlockIds.has('tb_dinner_landmark')) {
       landmarks.push({
         id: 'tb_dinner_landmark',
         startMin: 20 * 60 + 45, // 20:45
@@ -939,12 +1015,32 @@ export class PlannerEngine {
       priority: 'low'
     };
 
-    // Sort timeblocks chronologically
-    const finalScheduleBlocks: TimeBlock[] = [
-      ...completedBlocks,
-      ...newlyScheduledBlocks,
-      windDownBlock
-    ];
+    // Deduplicate and sort chronologically
+    const seenBlockIds = new Set<string>();
+    const finalScheduleBlocks: TimeBlock[] = [];
+
+    // Prioritize completed blocks first
+    for (const b of completedBlocks) {
+      if (!seenBlockIds.has(b.id)) {
+        seenBlockIds.add(b.id);
+        finalScheduleBlocks.push(b);
+      }
+    }
+
+    // Then newly scheduled blocks
+    for (const b of [...newlyScheduledBlocks, windDownBlock]) {
+      if (!seenBlockIds.has(b.id)) {
+        seenBlockIds.add(b.id);
+        finalScheduleBlocks.push(b);
+      }
+    }
+
+    // Sort by startTime
+    finalScheduleBlocks.sort((a, b) => {
+      const [ah, am] = a.startTime.split(':').map(Number);
+      const [bh, bm] = b.startTime.split(':').map(Number);
+      return ((ah || 0) * 60 + (am || 0)) - ((bh || 0) * 60 + (bm || 0));
+    });
 
     const actualStartTimeStr = this.formatMinutesToTimeString(startMinutesTotal);
 

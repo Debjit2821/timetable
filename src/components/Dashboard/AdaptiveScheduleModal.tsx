@@ -20,7 +20,7 @@ interface AdaptiveScheduleModalProps {
   profile: UserProfile;
   currentTimeString: string;
   onClose: () => void;
-  onApplyAdaptiveSchedule: (options: { startTime?: string; userChosenBedtime?: string; outputMode?: 'maximum' | 'balanced' | 'accelerated' }) => void;
+  onApplyAdaptiveSchedule: (options: { startTime?: string; userChosenBedtime?: string; outputMode?: 'maximum' | 'balanced' | 'accelerated'; isWakeUp?: boolean }) => void;
 }
 
 export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
@@ -60,7 +60,8 @@ export const AdaptiveScheduleModal: React.FC<AdaptiveScheduleModalProps> = ({
     onApplyAdaptiveSchedule({
       startTime: activeStartTime,
       userChosenBedtime: selectedBedtime,
-      outputMode
+      outputMode,
+      isWakeUp: false
     });
     onClose();
   };

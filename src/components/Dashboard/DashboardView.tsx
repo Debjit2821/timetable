@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   Utensils,
   Coffee,
-  Flame
+  Flame,
+  Trash2
 } from 'lucide-react';
 import { DailyPlan, UserProfile, Subject, DsaProblem, AdaptiveScheduleOptions } from '../../types';
 import { NextActionWidget } from '../NextActionWidget';
@@ -37,6 +38,7 @@ interface DashboardViewProps {
   syllabus: Subject[];
   dsaBank: DsaProblem[];
   onToggleTimeBlock: (blockId: string) => void;
+  onDeleteTimeBlock: (blockId: string) => void;
   onToggleHealthHabit: (habitKey: keyof DailyPlan['healthHabits']) => void;
   onAddWaterGlass: () => void;
   onRemoveWaterGlass: () => void;
@@ -53,6 +55,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   syllabus,
   dsaBank,
   onToggleTimeBlock,
+  onDeleteTimeBlock,
   onToggleHealthHabit,
   onAddWaterGlass,
   onRemoveWaterGlass,
@@ -237,7 +240,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span>Set When You Woke Up</span>
             </button>
             <button
-              onClick={() => onApplyAdaptiveSchedule({ startTime: currentTimeString })}
+              onClick={() => onApplyAdaptiveSchedule({ startTime: currentTimeString, isWakeUp: false })}
               className="btn-secondary text-xs px-2.5 py-1.5 whitespace-nowrap"
             >
               <Zap className="w-3 h-3" />
@@ -303,7 +306,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div
                 key={block.id}
                 onClick={() => onToggleTimeBlock(block.id)}
-                className={`p-3.5 flex items-start justify-between gap-3.5 transition-colors cursor-pointer ${
+                className={`group p-3.5 flex items-start justify-between gap-3.5 transition-colors cursor-pointer ${
                   isCurrent ? 'bg-indigo-950/30 ring-1 ring-inset ring-indigo-500/20' : 'hover:bg-white/[0.02]'
                 } ${block.isCompleted ? 'opacity-50' : ''}`}
               >
@@ -345,13 +348,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 </div>
 
-                <div className="text-right shrink-0">
-                  <div className="text-xs font-mono text-secondary">
-                    {block.startTime} – {block.endTime}
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-mono text-secondary">
+                      {block.startTime} – {block.endTime}
+                    </div>
+                    <div className="text-[11px] text-tertiary">
+                      {block.durationMinutes}m
+                    </div>
                   </div>
-                  <div className="text-[11px] text-tertiary">
-                    {block.durationMinutes}m
-                  </div>
+
+                  {/* Delete Block Action */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteTimeBlock(block.id);
+                    }}
+                    className="p-1 rounded text-tertiary hover:text-rose-400 hover:bg-rose-500/10 transition-colors opacity-70 group-hover:opacity-100"
+                    title="Remove task from schedule"
+                    aria-label={`Remove ${block.title}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             );

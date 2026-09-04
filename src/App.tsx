@@ -105,6 +105,23 @@ export const App: React.FC = () => {
     setCurrentPlan(updatedPlan);
   };
 
+  const handleDeleteTimeBlock = (blockId: string) => {
+    const updatedBlocks = currentPlan.timeBlocks.filter(block => block.id !== blockId);
+
+    const completedGateMin = updatedBlocks
+      .filter(b => b.category === 'gate' && b.isCompleted)
+      .reduce((sum, b) => sum + b.durationMinutes, 0);
+
+    const updatedPlan: DailyPlan = {
+      ...currentPlan,
+      timeBlocks: updatedBlocks,
+      actualStudyMinutes: completedGateMin
+    };
+
+    StorageService.saveDailyPlan(updatedPlan);
+    setCurrentPlan(updatedPlan);
+  };
+
   const handleToggleHealthHabit = (habitKey: keyof DailyPlan['healthHabits']) => {
     const currentVal = currentPlan.healthHabits[habitKey];
     let newVal: any = !currentVal;
@@ -317,6 +334,7 @@ export const App: React.FC = () => {
             syllabus={syllabus}
             dsaBank={dsaBank}
             onToggleTimeBlock={handleToggleTimeBlock}
+            onDeleteTimeBlock={handleDeleteTimeBlock}
             onToggleHealthHabit={handleToggleHealthHabit}
             onAddWaterGlass={handleAddWaterGlass}
             onRemoveWaterGlass={handleRemoveWaterGlass}

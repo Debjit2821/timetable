@@ -138,66 +138,127 @@ export class PlannerEngine {
   }
 
   /**
+   * Helper to identify canonical grouping key for deduplication.
+   */
+  static getCanonicalBlockKey(block: TimeBlock): string {
+    const titleLower = block.title.toLowerCase();
+    const idLower = block.id.toLowerCase();
+
+    // 1. Kickoff routine
+    if (
+      idLower.includes('kickoff') ||
+      idLower.includes('morning_routine') ||
+      titleLower.includes('kickoff') ||
+      titleLower.includes('wake-up') ||
+      titleLower.includes('morning routine')
+    ) {
+      return 'canonical_kickoff';
+    }
+
+    // 2. Sleep / Wind-Down
+    if (
+      idLower.startsWith('tb_sleep') ||
+      idLower.startsWith('tb_adaptive_winddown') ||
+      idLower.startsWith('tb_night_winddown') ||
+      titleLower.includes('sleep target') ||
+      titleLower.includes('night wind-down')
+    ) {
+      return 'canonical_night_winddown';
+    }
+
+    // 3. Landmark Meals
+    if (idLower === 'tb_breakfast' || titleLower.includes('breakfast')) return 'canonical_breakfast';
+    if (idLower === 'tb_lunch_landmark' || titleLower.includes('mindful indian lunch') || titleLower.includes('lunch landmark') || titleLower.includes('lunch fuel')) return 'canonical_lunch';
+    if (idLower === 'tb_chai_landmark' || titleLower.includes('evening chai') || titleLower.includes('chai landmark')) return 'canonical_chai';
+    if (idLower === 'tb_dinner_landmark' || titleLower.includes('dinner & digestion') || titleLower.includes('dinner landmark')) return 'canonical_dinner';
+
+    // 4. DSA Session
+    if (block.category === 'dsa' || idLower.includes('dsa') || titleLower.includes('dsa practice')) return 'canonical_dsa';
+
+    // 5. High-Yield Drill
+    if (idLower.includes('high_yield_drill') || titleLower.includes('accuracy & speed drill')) return 'canonical_high_yield_drill';
+
+    // 6. Health & Movement
+    if (idLower.includes('exercise') || titleLower.includes('physical activity') || (block.category === 'health' && !titleLower.includes('water'))) return 'canonical_exercise';
+
+    // 7. Spaced Revision
+    if (block.category === 'revision' || idLower.includes('revision') || titleLower.includes('spaced revision')) return 'canonical_revision';
+
+    // 8. Specific GATE Topic / PYQ
+    if (block.topicId) {
+      const isPyq = idLower.startsWith('tb_pyq') || titleLower.includes('pyq');
+      return isPyq ? `canonical_pyq_${block.topicId}` : `canonical_gate_${block.topicId}`;
+    }
+
+    // 9. Match by title if similar topic
+    if (block.category === 'gate') {
+      const cleanTitle = block.title.replace(/—.*$/, '').trim().toLowerCase();
+      if (cleanTitle) return `canonical_gate_title_${cleanTitle}`;
+    }
+
+    return block.id;
+  }
+
+  /**
    * Cleans corrupted or duplicated sleep/wind-down or duplicate kickoff blocks from any stored plan.
    */
   static sanitizePlan(plan: DailyPlan): DailyPlan {
     const profile = StorageService.getProfile();
-    const seenIds = new Set<string>();
-    const cleanedBlocks: TimeBlock[] = [];
 
-    const isKickoffBlock = (b: TimeBlock) =>
-      b.id.includes('kickoff') ||
-      b.id.includes('morning_routine') ||
-      b.title.toLowerCase().includes('kickoff') ||
-      b.title.toLowerCase().includes('wake-up');
-
-    // Check if there is already a completed kickoff block
-    const hasCompletedKickoff = plan.timeBlocks.some(b => b.isCompleted && isKickoffBlock(b));
-    let hasKeptUncompletedKickoff = false;
-
-    plan.timeBlocks.forEach(b => {
-      const cleanSub = this.cleanSubtitle(b.subtitle);
-      const isSleepOrWindDown =
+    // Group blocks by canonical key
+    const groups = new Map<string, TimeBlock[]>();
+    for (const b of plan.timeBlocks) {
+      const isSleep =
         b.id.startsWith('tb_sleep') ||
         b.id.startsWith('tb_adaptive_winddown') ||
         b.id.startsWith('tb_night_winddown') ||
         b.title.includes('Sleep Target') ||
         b.title.includes('Night Wind-Down');
 
-      if (isSleepOrWindDown) {
-        return; // Will be added as a single canonical winddown at the very end
-      }
+      if (isSleep) continue; // Single canonical wind-down will be appended at the end
 
-      // If this is a kickoff block
-      if (isKickoffBlock(b)) {
-        if (b.isCompleted) {
-          if (!seenIds.has(b.id)) {
-            seenIds.add(b.id);
-            cleanedBlocks.push({ ...b, subtitle: cleanSub });
-          }
-          return;
-        } else {
-          // If uncompleted and we already completed a kickoff earlier, discard stray duplicate
-          if (hasCompletedKickoff) {
-            return;
-          }
-          // Only keep at most one uncompleted kickoff block
-          if (hasKeptUncompletedKickoff) {
-            return;
-          }
-          hasKeptUncompletedKickoff = true;
-        }
-      }
+      const key = this.getCanonicalBlockKey(b);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(b);
+    }
 
-      const canonicalKey = b.id;
-      if (!seenIds.has(canonicalKey)) {
-        seenIds.add(canonicalKey);
-        cleanedBlocks.push({
-          ...b,
-          subtitle: cleanSub
+    const deduplicatedBlocks: TimeBlock[] = [];
+
+    groups.forEach((blocks) => {
+      // If any block in the group is completed, keep ONLY the earliest completed one
+      const completedInstances = blocks.filter(b => b.isCompleted);
+      if (completedInstances.length > 0) {
+        completedInstances.sort((a, b) => {
+          const [ah, am] = a.startTime.split(':').map(Number);
+          const [bh, bm] = b.startTime.split(':').map(Number);
+          return ((ah || 0) * 60 + (am || 0)) - ((bh || 0) * 60 + (bm || 0));
         });
+        const canonicalInstance = {
+          ...completedInstances[0],
+          subtitle: this.cleanSubtitle(completedInstances[0].subtitle)
+        };
+        deduplicatedBlocks.push(canonicalInstance);
+      } else {
+        // None is completed: keep the first instance
+        const canonicalInstance = {
+          ...blocks[0],
+          subtitle: this.cleanSubtitle(blocks[0].subtitle)
+        };
+        deduplicatedBlocks.push(canonicalInstance);
       }
     });
+
+    // Special Kickoff check:
+    // If there is ANY kickoff block kept, but there are other completed study tasks and the kickoff is uncompleted,
+    // discard the uncompleted kickoff if it's already mid-day!
+    const kickoffIdx = deduplicatedBlocks.findIndex(b => this.getCanonicalBlockKey(b) === 'canonical_kickoff');
+    if (kickoffIdx !== -1) {
+      const kickoffBlock = deduplicatedBlocks[kickoffIdx];
+      const hasOtherCompleted = deduplicatedBlocks.some(b => b.isCompleted && b !== kickoffBlock);
+      if (!kickoffBlock.isCompleted && hasOtherCompleted) {
+        deduplicatedBlocks.splice(kickoffIdx, 1);
+      }
+    }
 
     const targetSleep = plan.userChosenBedtime || profile.bedTime || '23:00';
     const [h, m] = targetSleep.split(':').map(Number);
@@ -208,7 +269,7 @@ export class PlannerEngine {
     const windStartM = windStartMin % 60;
 
     // Append exactly ONE clean wind-down block
-    cleanedBlocks.push({
+    deduplicatedBlocks.push({
       id: 'tb_night_winddown',
       startTime: `${windStartH.toString().padStart(2, '0')}:${windStartM.toString().padStart(2, '0')}`,
       endTime: targetSleep,
@@ -221,21 +282,29 @@ export class PlannerEngine {
     });
 
     // Sort timeblocks chronologically
-    cleanedBlocks.sort((a, b) => {
+    deduplicatedBlocks.sort((a, b) => {
       const [ah, am] = a.startTime.split(':').map(Number);
       const [bh, bm] = b.startTime.split(':').map(Number);
       return ((ah || 0) * 60 + (am || 0)) - ((bh || 0) * 60 + (bm || 0));
     });
 
-    return {
+    const accurateCompletedStudyMin = deduplicatedBlocks
+      .filter(b => (b.category === 'gate' || b.category === 'dsa' || b.category === 'revision') && b.isCompleted)
+      .reduce((sum, b) => sum + b.durationMinutes, 0);
+
+    const sanitizedPlan: DailyPlan = {
       ...plan,
-      timeBlocks: cleanedBlocks,
+      timeBlocks: deduplicatedBlocks,
+      actualStudyMinutes: accurateCompletedStudyMin,
       sleepConstraint: {
         targetSleepTime: targetSleep,
         isUserSelected: !!plan.userChosenBedtime,
         wakeTimeTomorrow: profile.wakeTime || '07:00'
       }
     };
+
+    StorageService.saveDailyPlan(sanitizedPlan);
+    return sanitizedPlan;
   }
 
   /**
@@ -660,7 +729,7 @@ export class PlannerEngine {
     startMinutesTotal: number,
     options: AdaptiveScheduleOptions = {}
   ): { updatedPlan: DailyPlan; report: AdaptiveScheduleReport } {
-    const rawPlan = StorageService.getDailyPlan(dateStr) || {
+    const rawPlan = this.sanitizePlan(StorageService.getDailyPlan(dateStr) || {
       date: dateStr,
       dayNumber: 1,
       totalDays: 158,
@@ -689,7 +758,7 @@ export class PlannerEngine {
       targetStudyMinutes: 240,
       dailyScore: 0,
       notes: ''
-    };
+    });
 
     const profile = StorageService.getProfile();
     const outputMode = options.outputMode || rawPlan.outputMode || 'maximum';
@@ -1065,7 +1134,8 @@ export class PlannerEngine {
       notes: `Strict maximum output schedule from ${actualStartTimeStr} to ${effectiveBedtimeStr} (${formatMinutesToHours(scheduledStudyMinutes)} study time).`
     };
 
-    StorageService.saveDailyPlan(updatedPlan);
+    const sanitizedPlan = this.sanitizePlan(updatedPlan);
+    StorageService.saveDailyPlan(sanitizedPlan);
 
     const report: AdaptiveScheduleReport = {
       originalPlannedMinutes: rawPlan.timeBlocks.reduce((sum, b) => sum + b.durationMinutes, 0),
@@ -1074,14 +1144,14 @@ export class PlannerEngine {
       adaptiveStartTime: actualStartTimeStr,
       adaptiveBedtime: effectiveBedtimeStr,
       recommendedBedtime: recommendedTimeStr,
-      retainedTasksCount: finalScheduleBlocks.filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision').length,
+      retainedTasksCount: sanitizedPlan.timeBlocks.filter(b => b.category === 'gate' || b.category === 'dsa' || b.category === 'revision').length,
       deferredTasksCount: Math.max(dayStudyTasks.length - dayTaskIndex, 0),
       summaryMessage: `Strict schedule generated from ${actualStartTimeStr} to ${effectiveBedtimeStr} with ${formatMinutesToHours(scheduledStudyMinutes)} of focused study.`,
       strategyApplied: `Continuous deep focus blocks with Indian standard meals and night-only revision.`,
       isWorkloadExceeding: dayStudyTasks.length > dayTaskIndex
     };
 
-    return { updatedPlan, report };
+    return { updatedPlan: sanitizedPlan, report };
   }
 
   /**

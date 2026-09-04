@@ -101,8 +101,9 @@ export const App: React.FC = () => {
       actualStudyMinutes: completedGateMin
     };
 
-    StorageService.saveDailyPlan(updatedPlan);
-    setCurrentPlan(updatedPlan);
+    const sanitized = PlannerEngine.sanitizePlan(updatedPlan);
+    StorageService.saveDailyPlan(sanitized);
+    setCurrentPlan(sanitized);
   };
 
   const handleDeleteTimeBlock = (blockId: string) => {
@@ -118,8 +119,9 @@ export const App: React.FC = () => {
       actualStudyMinutes: completedGateMin
     };
 
-    StorageService.saveDailyPlan(updatedPlan);
-    setCurrentPlan(updatedPlan);
+    const sanitized = PlannerEngine.sanitizePlan(updatedPlan);
+    StorageService.saveDailyPlan(sanitized);
+    setCurrentPlan(sanitized);
   };
 
   const handleToggleHealthHabit = (habitKey: keyof DailyPlan['healthHabits']) => {

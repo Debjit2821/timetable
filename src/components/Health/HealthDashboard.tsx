@@ -94,9 +94,9 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Sleep */}
         <div className="panel p-4">
-          <div className="flex items-center justify-between text-xs text-tertiary mb-2">
+          <div className="flex items-center justify-between text-xs text-secondary mb-2 font-medium">
             <span>Restorative Sleep</span>
-            <Moon className="w-3.5 h-3.5" />
+            <Moon className="w-4.5 h-4.5 text-indigo-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-primary">
             7.5h
@@ -108,9 +108,9 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
 
         {/* Activity */}
         <div className="panel p-4">
-          <div className="flex items-center justify-between text-xs text-tertiary mb-2">
+          <div className="flex items-center justify-between text-xs text-secondary mb-2 font-medium">
             <span>Physical Activity</span>
-            <Heart className="w-3.5 h-3.5" />
+            <Heart className="w-4.5 h-4.5 text-rose-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-primary">
             {plan.healthHabits.exerciseCompleted ? '40 min' : '0 min'}
@@ -122,16 +122,16 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
 
         {/* Hydration */}
         <div className="panel p-4">
-          <div className="flex items-center justify-between text-xs text-tertiary mb-2">
+          <div className="flex items-center justify-between text-xs text-secondary mb-2 font-medium">
             <span>Hydration (2.5L)</span>
-            <Droplet className="w-3.5 h-3.5" />
+            <Droplet className="w-4.5 h-4.5 text-cyan-400" />
           </div>
           <div className="text-2xl font-bold font-mono text-primary">
             {plan.healthHabits.hydrationGlasses} <span className="text-xs font-normal text-tertiary">/ 10 cups</span>
           </div>
           <div className="text-xs text-secondary mt-1 flex items-center justify-between">
             <span>{plan.healthHabits.hydrationGlasses * 250} ml logged</span>
-            <button onClick={onAddWaterGlass} className="text-accent hover:underline">+ Add cup</button>
+            <button onClick={onAddWaterGlass} className="text-accent hover:text-accent-hover font-medium">+ Add cup</button>
           </div>
         </div>
       </div>
@@ -149,11 +149,11 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className={`check-circle ${plan.healthHabits.morningKickoffHydration ? 'checked' : ''}`}>
-                {plan.healthHabits.morningKickoffHydration && <Check className="w-3 h-3" />}
+                {plan.healthHabits.morningKickoffHydration && <Check className="w-3.5 h-3.5" />}
               </div>
               <span className="text-xs text-primary font-medium">Morning 500ml water kickoff</span>
             </div>
-            <span className="text-[11px] text-tertiary font-mono">07:00 AM</span>
+            <span className="text-[11.5px] text-tertiary font-mono">07:00 AM</span>
           </label>
 
           <label 
@@ -162,11 +162,11 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className={`check-circle ${plan.healthHabits.morningStretching ? 'checked' : ''}`}>
-                {plan.healthHabits.morningStretching && <Check className="w-3 h-3" />}
+                {plan.healthHabits.morningStretching && <Check className="w-3.5 h-3.5" />}
               </div>
               <span className="text-xs text-primary font-medium">15m Dynamic stretch / sun exposure</span>
             </div>
-            <span className="text-[11px] text-tertiary font-mono">07:15 AM</span>
+            <span className="text-[11.5px] text-tertiary font-mono">07:15 AM</span>
           </label>
 
           <label 
@@ -175,11 +175,11 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className={`check-circle ${plan.healthHabits.studyBreaksTaken >= 4 ? 'checked' : ''}`}>
-                {plan.healthHabits.studyBreaksTaken >= 4 && <Check className="w-3 h-3" />}
+                {plan.healthHabits.studyBreaksTaken >= 4 && <Check className="w-3.5 h-3.5" />}
               </div>
               <span className="text-xs text-primary font-medium">Regular 50/10m movement breaks ({plan.healthHabits.studyBreaksTaken}/4 logged)</span>
             </div>
-            <span className="text-[11px] text-accent font-medium">+ Click to log</span>
+            <span className="text-[11.5px] text-accent font-semibold">+ Click to log</span>
           </label>
 
           <label 
@@ -188,11 +188,11 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className={`check-circle ${plan.healthHabits.exerciseCompleted ? 'checked' : ''}`}>
-                {plan.healthHabits.exerciseCompleted && <Check className="w-3 h-3" />}
+                {plan.healthHabits.exerciseCompleted && <Check className="w-3.5 h-3.5" />}
               </div>
               <span className="text-xs text-primary font-medium">WHO physical activity block (30-45m walk/cardio)</span>
             </div>
-            <span className="text-[11px] text-tertiary font-mono">06:45 PM</span>
+            <span className="text-[11.5px] text-tertiary font-mono">06:45 PM</span>
           </label>
 
           <label 
@@ -201,11 +201,11 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
           >
             <div className="flex items-center gap-3">
               <div className={`check-circle ${plan.healthHabits.sleepTargetAchieved ? 'checked' : ''}`}>
-                {plan.healthHabits.sleepTargetAchieved && <Check className="w-3 h-3" />}
+                {plan.healthHabits.sleepTargetAchieved && <Check className="w-3.5 h-3.5" />}
               </div>
               <span className="text-xs text-primary font-medium">7.5 - 8.0h Restorative sleep target</span>
             </div>
-            <span className="text-[11px] text-tertiary font-mono">11:00 PM</span>
+            <span className="text-[11.5px] text-tertiary font-mono">11:00 PM</span>
           </label>
         </div>
       </section>
@@ -218,7 +218,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
             <span className="text-xs font-semibold text-primary font-heading">
               20-20-20 Vision Rest Protocol
             </span>
-            <Eye className="w-3.5 h-3.5 text-tertiary" />
+            <Eye className="w-4 h-4 text-cyan-400" />
           </div>
 
           <p className="text-xs text-secondary leading-relaxed">
@@ -235,7 +235,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
                 onClick={() => setEyeTimerRunning(!eyeTimerRunning)}
                 className="btn-primary text-xs px-3 py-1.5"
               >
-                {eyeTimerRunning ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+                {eyeTimerRunning ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                 <span>{eyeTimerRunning ? 'Pause' : 'Start'}</span>
               </button>
 
@@ -246,7 +246,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({
                 }}
                 className="btn-ghost p-1.5"
               >
-                <RotateCcw className="w-3 h-3 text-tertiary" />
+                <RotateCcw className="w-3.5 h-3.5 text-tertiary" />
               </button>
             </div>
           </div>

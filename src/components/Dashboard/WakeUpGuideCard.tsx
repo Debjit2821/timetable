@@ -61,10 +61,10 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-accent font-semibold">
+              <span className="text-[11.5px] font-mono uppercase tracking-wider text-accent font-bold">
                 Instant Action Guide
               </span>
-              <span className="pill pill-indigo text-[10px] font-mono">
+              <span className="pill pill-indigo text-[11px] font-mono font-medium">
                 Woke up at {protocol.wakeTime}
               </span>
             </div>
@@ -77,16 +77,16 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
         <div className="flex items-center gap-2 self-start sm:self-center">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="btn-ghost text-xs px-2.5 py-1 text-secondary hover:text-primary flex items-center gap-1"
+            className="btn-ghost text-xs px-2.5 py-1 text-secondary hover:text-primary flex items-center gap-1 font-medium"
           >
             <span>{isCollapsed ? 'Expand Steps' : 'Collapse'}</span>
-            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
 
           {onDismiss && (
             <button
               onClick={onDismiss}
-              className="text-tertiary hover:text-primary p-1 rounded hover:bg-white/[0.05]"
+              className="text-secondary hover:text-primary p-1 rounded hover:bg-white/[0.05]"
               title="Dismiss guide"
             >
               <X className="w-4 h-4" />
@@ -96,12 +96,12 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
       </div>
 
       {/* Encouraging Mindset Banner */}
-      <div className="mt-3.5 p-3 rounded-md bg-indigo-950/50 border border-indigo-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-        <div className="flex items-start gap-2 text-indigo-200">
-          <Sparkles className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+      <div className="mt-3.5 p-3 rounded-md bg-indigo-950/60 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+        <div className="flex items-start gap-2 text-indigo-100 font-normal">
+          <Sparkles className="w-4 h-4 text-indigo-300 shrink-0 mt-0.5" />
           <span>{protocol.mindsetMessage}</span>
         </div>
-        <div className="shrink-0 font-mono text-[11px] text-accent bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/30 text-center">
+        <div className="shrink-0 font-mono text-[11.5px] text-indigo-200 bg-indigo-500/20 px-2.5 py-1 rounded border border-indigo-500/40 text-center font-semibold">
           <strong>{protocol.projectedStudyHours}h</strong> pure study projected today
         </div>
       </div>
@@ -118,7 +118,7 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
                   onClick={() => toggleStep(step.stepNumber)}
                   className={`p-3 rounded-md border text-left cursor-pointer transition-all ${
                     isChecked
-                      ? 'bg-white/[0.02] border-subtle opacity-60'
+                      ? 'bg-white/[0.02] border-subtle opacity-70'
                       : 'bg-[#090b12] border-subtle hover:border-indigo-500/40 hover:bg-indigo-950/20'
                   }`}
                 >
@@ -131,7 +131,7 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
                         toggleStep(step.stepNumber);
                       }}
                     >
-                      {isChecked && <Check className="w-3 h-3" />}
+                      {isChecked && <Check className="w-3.5 h-3.5" />}
                     </button>
 
                     <div className="space-y-1">
@@ -140,11 +140,11 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
                         <span className="text-xs font-semibold text-primary font-heading">
                           Step {step.stepNumber}: {step.title}
                         </span>
-                        <span className="text-[10px] font-mono text-tertiary">
+                        <span className="text-[11px] font-mono text-tertiary">
                           ({step.timeframe})
                         </span>
                       </div>
-                      <p className="text-[11px] text-secondary leading-relaxed">
+                      <p className="text-xs text-secondary leading-relaxed font-normal">
                         {step.action}
                       </p>
                     </div>
@@ -158,9 +158,9 @@ export const WakeUpGuideCard: React.FC<WakeUpGuideCardProps> = ({
           {protocol.mealRecommendation && (
             <div className="p-3 rounded-md bg-[#090b12] border border-subtle flex items-center justify-between gap-3 text-xs text-secondary">
               <div className="flex items-center gap-2">
-                <Utensils className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="text-[11px] text-secondary leading-normal">
-                  <strong className="text-primary font-medium">Indian Routine Rhythm: </strong>
+                <Utensils className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="text-xs text-secondary leading-normal">
+                  <strong className="text-primary font-semibold">Indian Routine Rhythm: </strong>
                   {protocol.mealRecommendation}
                 </span>
               </div>

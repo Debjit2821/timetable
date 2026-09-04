@@ -118,45 +118,45 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const titleLower = block.title.toLowerCase();
     if (titleLower.includes('lunch')) {
       return (
-        <span className="pill text-[10px] font-mono border-amber-500/40 text-amber-300 bg-amber-950/30 flex items-center gap-1">
-          <Utensils className="w-2.5 h-2.5" />
+        <span className="pill text-[11px] font-mono border-amber-500/40 text-amber-300 bg-amber-950/40 flex items-center gap-1.5 font-medium">
+          <Utensils className="w-3.5 h-3.5" />
           <span>Indian Lunch</span>
         </span>
       );
     }
     if (titleLower.includes('chai') || titleLower.includes('tea')) {
       return (
-        <span className="pill text-[10px] font-mono border-amber-500/40 text-amber-200 bg-amber-950/30 flex items-center gap-1">
-          <Coffee className="w-2.5 h-2.5" />
+        <span className="pill text-[11px] font-mono border-amber-500/40 text-amber-200 bg-amber-950/40 flex items-center gap-1.5 font-medium">
+          <Coffee className="w-3.5 h-3.5" />
           <span>Evening Chai</span>
         </span>
       );
     }
     if (titleLower.includes('dinner')) {
       return (
-        <span className="pill text-[10px] font-mono border-rose-500/40 text-rose-300 bg-rose-950/30 flex items-center gap-1">
-          <Utensils className="w-2.5 h-2.5" />
+        <span className="pill text-[11px] font-mono border-rose-500/40 text-rose-300 bg-rose-950/40 flex items-center gap-1.5 font-medium">
+          <Utensils className="w-3.5 h-3.5" />
           <span>Indian Dinner</span>
         </span>
       );
     }
     if (block.category === 'gate') {
       return (
-        <span className="pill pill-indigo text-[10px] font-mono">
+        <span className="pill pill-indigo text-[11px] font-mono font-medium">
           GATE Study
         </span>
       );
     }
     if (block.category === 'dsa') {
       return (
-        <span className="pill text-[10px] font-mono border-emerald-500/30 text-emerald-400 bg-emerald-950/30">
+        <span className="pill text-[11px] font-mono border-emerald-500/40 text-emerald-300 bg-emerald-950/40 font-medium">
           DSA Practice
         </span>
       );
     }
     if (block.category === 'revision') {
       return (
-        <span className="pill text-[10px] font-mono border-purple-500/30 text-purple-300 bg-purple-950/30">
+        <span className="pill text-[11px] font-mono border-purple-500/40 text-purple-300 bg-purple-950/40 font-medium">
           Spaced Revision
         </span>
       );
@@ -194,7 +194,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="btn-ghost text-xs px-2.5 py-1 text-secondary border border-subtle hover:text-primary flex items-center gap-1.5"
             title="Adjust timeline or sleep constraints"
           >
-            <Sliders className="w-3 h-3" />
+            <Sliders className="w-3.5 h-3.5" />
             <span>Timeline</span>
           </button>
 
@@ -205,11 +205,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div>
             <span className="text-tertiary">GATE 2027: </span>
-            <span className="text-primary font-medium">{daysRemaining}d</span>
+            <span className="text-primary font-semibold">{daysRemaining}d</span>
           </div>
           <div>
             <span className="text-tertiary">Syllabus: </span>
-            <span className="text-primary font-medium">{syllabusCoveredPercent}%</span>
+            <span className="text-primary font-semibold">{syllabusCoveredPercent}%</span>
           </div>
         </div>
       </div>
@@ -308,7 +308,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 onClick={() => onToggleTimeBlock(block.id)}
                 className={`group p-3.5 flex items-start justify-between gap-3.5 transition-colors cursor-pointer ${
                   isCurrent ? 'bg-indigo-950/30 ring-1 ring-inset ring-indigo-500/20' : 'hover:bg-white/[0.02]'
-                } ${block.isCompleted ? 'opacity-50' : ''}`}
+                } ${block.isCompleted ? 'opacity-70' : ''}`}
               >
                 <div className="flex items-start gap-3">
                   {/* Circle Checkbox */}
@@ -320,7 +320,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       onToggleTimeBlock(block.id);
                     }}
                   >
-                    {block.isCompleted && <Check className="w-3 h-3" />}
+                    {block.isCompleted && <Check className="w-3.5 h-3.5" />}
                   </button>
 
                   <div>
@@ -329,19 +329,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         {block.title}
                       </span>
                       {isCurrent && (
-                        <span className="pill pill-indigo text-[10px] font-mono">
+                        <span className="pill pill-indigo text-[11px] font-mono font-medium">
                           Now
                         </span>
                       )}
                       {badge}
                       {block.isAdjusted && !badge && (
-                        <span className="pill text-[9px] font-mono">
+                        <span className="pill text-[10px] font-mono">
                           Adjusted
                         </span>
                       )}
                     </div>
                     {cleanSub && (
-                      <p className="text-xs text-tertiary mt-0.5">
+                      <p className="text-xs text-secondary mt-0.5 font-normal">
                         {cleanSub}
                       </p>
                     )}
@@ -350,10 +350,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right shrink-0">
-                    <div className="text-xs font-mono text-secondary">
+                    <div className="text-xs font-mono text-secondary font-medium">
                       {block.startTime} – {block.endTime}
                     </div>
-                    <div className="text-[11px] text-tertiary">
+                    <div className="text-[11.5px] text-tertiary font-mono">
                       {block.durationMinutes}m
                     </div>
                   </div>
@@ -379,11 +379,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Sleep Boundary (Hard Constraint Display - Not a task) */}
           <div className="p-3 bg-[#0a0c14] flex items-center justify-between text-xs text-secondary border-t border-subtle">
             <div className="flex items-center gap-2">
-              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+              <Moon className="w-4 h-4 text-indigo-400" />
               <span className="font-semibold text-primary">Sleep Deadline & Rest Boundary:</span>
               <span className="font-mono text-accent font-bold">{targetSleepTime}</span>
             </div>
-            <span className="text-[11px] text-tertiary font-mono hidden sm:inline">
+            <span className="text-[11.5px] text-secondary font-mono hidden sm:inline">
               Sleep Protected · Wake {profile.wakeTime}
             </span>
           </div>
@@ -398,7 +398,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h2 className="text-base font-semibold text-primary font-heading">
               DSA Target
             </h2>
-            <span className="text-xs font-mono text-tertiary">
+            <span className="text-xs font-mono text-secondary">
               {dsaSolvedToday} / 3 completed
             </span>
           </div>
@@ -417,7 +417,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </span>
                         <span className="pill text-[10px]">{prob.difficulty}</span>
                       </div>
-                      <div className="text-[11px] text-tertiary">{prob.category}</div>
+                      <div className="text-[11.5px] text-tertiary">{prob.category}</div>
                     </div>
                   </div>
 
@@ -441,7 +441,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h2 className="text-base font-semibold text-primary font-heading">
               Healthy Day Habit Checklist
             </h2>
-            <span className="text-xs font-mono text-emerald-400">
+            <span className="text-xs font-mono text-emerald-400 font-semibold">
               Score: {healthBreakdown.score}%
             </span>
           </div>
@@ -450,16 +450,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Minimal Hydration Strip */}
             <div className="flex items-center justify-between pb-3 border-b border-subtle">
               <div className="flex items-center gap-2">
-                <Droplet className="w-3.5 h-3.5 text-cyan-400" />
+                <Droplet className="w-4 h-4 text-cyan-400" />
                 <span className="text-xs text-secondary font-medium">Hydration (2.5L)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-primary font-medium">
+                <span className="text-xs font-mono text-primary font-semibold">
                   {plan.healthHabits.hydrationGlasses} / 10 cups
                 </span>
                 <button
                   onClick={onAddWaterGlass}
-                  className="btn-ghost text-xs px-2 py-0.5 text-accent"
+                  className="btn-ghost text-xs px-2 py-0.5 text-accent font-medium hover:text-accent-hover"
                 >
                   + Add cup
                 </button>
@@ -473,7 +473,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-2.5 cursor-pointer text-secondary hover:text-primary"
               >
                 <div className={`check-circle ${plan.healthHabits.morningKickoffHydration ? 'checked' : ''}`}>
-                  {plan.healthHabits.morningKickoffHydration && <Check className="w-3 h-3" />}
+                  {plan.healthHabits.morningKickoffHydration && <Check className="w-3.5 h-3.5" />}
                 </div>
                 <span>Morning / Wake-up 500ml water kickoff</span>
               </label>
@@ -483,7 +483,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-2.5 cursor-pointer text-secondary hover:text-primary"
               >
                 <div className={`check-circle ${plan.healthHabits.morningStretching ? 'checked' : ''}`}>
-                  {plan.healthHabits.morningStretching && <Check className="w-3 h-3" />}
+                  {plan.healthHabits.morningStretching && <Check className="w-3.5 h-3.5" />}
                 </div>
                 <span>15m Dynamic stretch / sun exposure</span>
               </label>
@@ -493,7 +493,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-2.5 cursor-pointer text-secondary hover:text-primary"
               >
                 <div className={`check-circle ${plan.healthHabits.exerciseCompleted ? 'checked' : ''}`}>
-                  {plan.healthHabits.exerciseCompleted && <Check className="w-3 h-3" />}
+                  {plan.healthHabits.exerciseCompleted && <Check className="w-3.5 h-3.5" />}
                 </div>
                 <span>20-30m WHO physical activity / walk</span>
               </label>
@@ -503,7 +503,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center gap-2.5 cursor-pointer text-secondary hover:text-primary"
               >
                 <div className={`check-circle ${plan.healthHabits.sleepTargetAchieved ? 'checked' : ''}`}>
-                  {plan.healthHabits.sleepTargetAchieved && <Check className="w-3 h-3" />}
+                  {plan.healthHabits.sleepTargetAchieved && <Check className="w-3.5 h-3.5" />}
                 </div>
                 <span>7.0 - 8.0h Restorative sleep target</span>
               </label>
@@ -518,17 +518,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="text-sm font-semibold text-primary font-heading">
             Daily Accountability Review
           </div>
-          <p className="text-xs text-tertiary mt-0.5">
+          <p className="text-xs text-secondary mt-0.5">
             Reflect on completed work and prepare tomorrow's schedule.
           </p>
         </div>
 
         <button
           onClick={() => setShowReviewModal(true)}
-          className="btn-secondary text-xs px-3.5 py-2"
+          className="btn-secondary text-xs px-3.5 py-2 font-medium"
         >
           <span>Review Day</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
 

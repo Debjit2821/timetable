@@ -374,9 +374,9 @@ export const TopicWisePracticeView: React.FC<TopicWisePracticeViewProps> = ({
       {/* 4. QUESTIONS FEED */}
       {paginatedQuestions.length === 0 ? (
         <div className="panel p-8 text-center space-y-3">
-          <HelpCircle className="w-8 h-8 text-tertiary mx-auto opacity-50" />
+          <HelpCircle className="w-7 h-7 text-indigo-400/70 mx-auto" />
           <h3 className="text-sm font-semibold text-primary">No Questions Match Current Filter</h3>
-          <p className="text-xs text-tertiary max-w-md mx-auto">
+          <p className="text-xs text-secondary max-w-md mx-auto">
             Try resetting the source, subject, year, or search query.
           </p>
           <button onClick={handleResetFilters} className="btn-secondary text-xs px-3 py-1.5">
@@ -401,23 +401,23 @@ export const TopicWisePracticeView: React.FC<TopicWisePracticeViewProps> = ({
                 <div className="flex items-start justify-between gap-3 border-b border-subtle pb-3">
                   <div className="flex items-center gap-2 flex-wrap text-xs">
                     {q.sourceType === 'Official GATE PYQ' ? (
-                      <span className="pill pill-emerald text-[10px] font-mono flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      <span className="pill pill-emerald text-[11px] font-mono flex items-center gap-1.5 font-medium">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                         OFFICIAL GATE {q.year} {q.session ? `(${q.session})` : ''} Q{q.questionNumber}
                       </span>
                     ) : (
-                      <span className="pill pill-indigo text-[10px] font-mono flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-indigo-400" />
+                      <span className="pill pill-indigo text-[11px] font-mono flex items-center gap-1.5 font-medium">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                         GatePlanner Practice Drill
                       </span>
                     )}
 
-                    <span className="pill text-[10px]">{q.type}</span>
-                    <span className="pill text-[10px] font-mono">{q.marks} Mark{q.marks > 1 ? 's' : ''}</span>
+                    <span className="pill text-[11px] font-medium">{q.type}</span>
+                    <span className="pill text-[11px] font-mono font-medium">{q.marks} Mark{q.marks > 1 ? 's' : ''}</span>
                     
                     {userAttempt && (
-                      <span className={`pill text-[10px] flex items-center gap-1 ${userAttempt.isCorrect ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'}`}>
-                        {userAttempt.isCorrect ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                      <span className={`pill text-[11px] font-medium flex items-center gap-1.5 ${userAttempt.isCorrect ? 'text-emerald-400 bg-emerald-500/15' : 'text-rose-400 bg-rose-500/15'}`}>
+                        {userAttempt.isCorrect ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                         {userAttempt.isCorrect ? 'Correct' : 'Incorrect'}
                       </span>
                     )}
@@ -426,7 +426,7 @@ export const TopicWisePracticeView: React.FC<TopicWisePracticeViewProps> = ({
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => handleToggleBookmark(q.id)}
-                      className="text-tertiary hover:text-amber-400 transition-colors"
+                      className="text-secondary hover:text-amber-400 transition-colors"
                       title={isBookmarked ? 'Remove Bookmark' : 'Bookmark Question'}
                     >
                       {isBookmarked ? (

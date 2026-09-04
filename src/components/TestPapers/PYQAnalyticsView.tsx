@@ -95,7 +95,7 @@ export const PYQAnalyticsView: React.FC = () => {
         {/* Full Year-by-Year Completeness Table */}
         <div className="border border-subtle rounded-md overflow-hidden mt-3">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#141724] text-tertiary font-mono uppercase text-[10px] border-b border-subtle">
+            <thead className="bg-[#141724] text-secondary font-mono uppercase text-[11px] border-b border-subtle">
               <tr>
                 <th className="p-2.5">Year</th>
                 <th className="p-2.5">Organizing Institute</th>
@@ -106,25 +106,25 @@ export const PYQAnalyticsView: React.FC = () => {
                 <th className="p-2.5 text-right">Audit Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-subtle/40 font-mono text-[11px]">
+            <tbody className="divide-y divide-subtle/40 font-mono text-[11.5px]">
               {auditReport.yearRecords.map((rec: YearAuditRecord) => (
                 <React.Fragment key={rec.year}>
                   <tr className="hover:bg-white/[0.02] transition-colors bg-white/[0.01]">
                     <td className="p-2.5 font-bold text-primary">GATE {rec.year}</td>
                     <td className="p-2.5 text-secondary font-sans">{rec.organizingInstitute}</td>
-                    <td className="p-2.5 text-tertiary">
+                    <td className="p-2.5 text-secondary">
                       {rec.sessions.length > 1 ? `${rec.sessions.length} Official Papers (${rec.sessions.join(', ')})` : rec.sessions[0]}
                     </td>
                     <td className="p-2.5 text-center text-secondary">{rec.discoveredCount}</td>
                     <td className="p-2.5 text-center text-emerald-400 font-bold">{rec.importedCount}</td>
-                    <td className="p-2.5 text-center text-tertiary">{rec.missingCount}</td>
+                    <td className="p-2.5 text-center text-secondary">{rec.missingCount}</td>
                     <td className="p-2.5 text-right">
                       {rec.isComplete ? (
-                        <span className="pill pill-emerald text-[10px]">
+                        <span className="pill pill-emerald text-[11px] font-medium">
                           ✓ 100% Ingested
                         </span>
                       ) : (
-                        <span className="pill pill-indigo text-[10px]">
+                        <span className="pill pill-indigo text-[11px] font-medium">
                           {rec.importedCount} / {rec.discoveredCount} Verified
                         </span>
                       )}
@@ -133,17 +133,17 @@ export const PYQAnalyticsView: React.FC = () => {
 
                   {/* Paper-level sub-rows when multiple sessions exist */}
                   {rec.papers && rec.papers.length > 1 && rec.papers.map((p: PaperAuditRecord) => (
-                    <tr key={`${rec.year}-${p.session}`} className="bg-black/20 text-[10px] text-tertiary">
-                      <td className="p-2 pl-6 font-mono text-tertiary">↳ {p.session}</td>
-                      <td className="p-2 text-tertiary font-sans" colSpan={2}>{p.paperName}</td>
-                      <td className="p-2 text-center text-tertiary">{p.discoveredCount}</td>
-                      <td className="p-2 text-center text-emerald-400/80 font-bold">{p.importedCount}</td>
-                      <td className="p-2 text-center text-tertiary">{p.missingCount}</td>
+                    <tr key={`${rec.year}-${p.session}`} className="bg-black/30 text-[11px] text-secondary">
+                      <td className="p-2 pl-6 font-mono text-secondary">↳ {p.session}</td>
+                      <td className="p-2 text-secondary font-sans" colSpan={2}>{p.paperName}</td>
+                      <td className="p-2 text-center text-secondary">{p.discoveredCount}</td>
+                      <td className="p-2 text-center text-emerald-400 font-bold">{p.importedCount}</td>
+                      <td className="p-2 text-center text-secondary">{p.missingCount}</td>
                       <td className="p-2 text-right">
                         {p.isComplete ? (
-                          <span className="text-emerald-400 font-mono">✓ Complete</span>
+                          <span className="text-emerald-400 font-mono font-medium">✓ Complete</span>
                         ) : (
-                          <span className="text-amber-400/80 font-mono">{p.missingCount} missing</span>
+                          <span className="text-amber-400 font-mono font-medium">{p.missingCount} missing</span>
                         )}
                       </td>
                     </tr>

@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-subtle bg-[#090a0f]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-subtle bg-[#090a0f]/95 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           {/* Brand */}
@@ -74,14 +74,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 cursor-pointer" 
             onClick={() => setCurrentTab('dashboard')}
           >
-            <div className="w-7 h-7 rounded-md bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Compass className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <Compass className="w-4.5 h-4.5" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm tracking-tight text-primary font-heading">
+              <span className="font-bold text-sm tracking-tight text-primary font-heading">
                 GatePlanner
               </span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-subtle text-secondary border border-subtle">
+              <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded bg-white/5 text-primary border border-subtle">
                 {profile.paper}
               </span>
             </div>
@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'text-secondary hover:text-primary hover:bg-white/5'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-primary' : 'text-tertiary'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-tertiary'}`} />
                   <span>{item.label}</span>
                   {item.alert && (
                     <span className="w-1.5 h-1.5 bg-amber-400 rounded-full ml-0.5" />
@@ -116,40 +116,40 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2.5">
             {/* Live Time Clock */}
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-subtle text-xs text-secondary font-mono">
-              <Clock className="w-3 h-3 text-tertiary" />
+              <Clock className="w-3.5 h-3.5 text-tertiary" />
               <span>{displayHours}:{minutes}:{seconds} {ampm}</span>
             </div>
 
             {/* Exam Countdown */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-subtle text-xs text-secondary">
-              <span className="text-primary font-medium">{daysRemaining}d</span>
+              <span className="text-primary font-semibold">{daysRemaining}d</span>
               <span className="text-tertiary">remaining</span>
             </div>
 
             {/* Health Pill */}
-            <div className="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-md bg-subtle border border-subtle text-xs text-secondary">
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-subtle text-xs text-secondary">
               <span className="text-tertiary">Health</span>
-              <span className="text-emerald-400 font-medium">{healthScore}%</span>
+              <span className="text-emerald-400 font-semibold">{healthScore}%</span>
             </div>
 
             {/* Sync Action */}
             <button
               onClick={onTriggerSync}
               title={hasUpdateAvailable ? "Official update available. Click to review." : "Check official sources"}
-              className={`p-1.5 rounded-md border border-subtle text-tertiary hover:text-primary hover:bg-subtle transition-colors ${
+              className={`p-1.5 rounded-md border border-subtle text-secondary hover:text-primary hover:bg-subtle transition-colors ${
                 hasUpdateAvailable ? 'text-amber-400 border-amber-500/30' : ''
               }`}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-accent' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-accent' : ''}`} />
             </button>
 
             {/* Sound Toggle */}
             <button
               onClick={onToggleSound}
               title={profile.soundEnabled ? 'Mute audio' : 'Enable audio'}
-              className="p-1.5 rounded-md border border-subtle text-tertiary hover:text-primary hover:bg-subtle transition-colors"
+              className="p-1.5 rounded-md border border-subtle text-secondary hover:text-primary hover:bg-subtle transition-colors"
             >
-              {profile.soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-secondary" /> : <VolumeX className="w-3.5 h-3.5 text-tertiary" />}
+              {profile.soundEnabled ? <Volume2 className="w-4 h-4 text-secondary" /> : <VolumeX className="w-4 h-4 text-tertiary" />}
             </button>
           </div>
         </div>

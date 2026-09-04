@@ -349,12 +349,70 @@ export class StorageService {
     }
   }
 
+  static resetProgressToBeginning(): void {
+    const today = new Date().toISOString().split('T')[0];
+    const profile = this.getProfile();
+    const updatedProfile: UserProfile = {
+      ...profile,
+      startDate: today,
+      lastActiveDate: today,
+      streakDays: 0
+    };
+    this.saveProfile(updatedProfile);
+
+    // Reset all syllabus topics to 0% / not_started
+    const cleanSyllabus = DEFAULT_GATE_CS_SYLLABUS.map(subject => ({
+      ...subject,
+      topics: subject.topics.map(t => ({
+        ...t,
+        status: 'not_started' as const,
+        completionPercent: 0,
+        practiceStatus: 'not_started' as const,
+        pyqStatus: 'not_started' as const,
+        pyqSolved: 0,
+        revisionLevel: 0,
+        nextRevisionDate: null,
+        lastStudiedAt: null
+      }))
+    }));
+    this.saveSyllabus(cleanSyllabus);
+
+    // Reset DSA problem bank
+    const cleanDsa = DEFAULT_DSA_PROBLEM_BANK.map(p => ({
+      ...p,
+      solved: false,
+      attempts: 0,
+      lastAttempted: undefined
+    }));
+    this.saveDsaBank(cleanDsa);
+
+    // Clear previous daily plans, revision queues, and test attempts
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.DAILY_PLANS);
+      localStorage.removeItem(STORAGE_KEYS.REVISION_QUEUE);
+      localStorage.removeItem(STORAGE_KEYS.TEST_ATTEMPTS);
+      localStorage.removeItem(STORAGE_KEYS.PYQ_ATTEMPTS);
+      localStorage.removeItem(STORAGE_KEYS.PYQ_BOOKMARKS);
+    }
+    delete memoryFallback[STORAGE_KEYS.DAILY_PLANS];
+    delete memoryFallback[STORAGE_KEYS.REVISION_QUEUE];
+    delete memoryFallback[STORAGE_KEYS.TEST_ATTEMPTS];
+    delete memoryFallback[STORAGE_KEYS.PYQ_ATTEMPTS];
+    delete memoryFallback[STORAGE_KEYS.PYQ_BOOKMARKS];
+  }
+
   static resetToDefault(): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.clear();
     }
     Object.keys(memoryFallback).forEach(k => delete memoryFallback[k]);
-    this.saveProfile(DEFAULT_PROFILE);
+    const today = new Date().toISOString().split('T')[0];
+    this.saveProfile({
+      ...DEFAULT_PROFILE,
+      startDate: today,
+      lastActiveDate: today,
+      streakDays: 0
+    });
     this.saveSyllabus(DEFAULT_GATE_CS_SYLLABUS);
     this.saveDsaBank(DEFAULT_DSA_PROBLEM_BANK);
   }

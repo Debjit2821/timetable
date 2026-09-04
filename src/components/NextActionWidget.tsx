@@ -99,8 +99,8 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
   if (!activeBlock) {
     return (
       <div className="panel p-6 border-subtle text-center">
-        <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-          <Check className="w-4 h-4" />
+        <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+          <Check className="w-5 h-5" />
         </div>
         <h3 className="text-base font-semibold text-primary font-heading">
           All tasks completed for today.
@@ -133,18 +133,18 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
   };
 
   return (
-    <div className="panel p-6 border-subtle bg-[#11131c]/80 relative overflow-hidden">
+    <div className="panel p-6 border-subtle bg-[#11131c]/90 relative overflow-hidden">
       {/* Header Label */}
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-accent font-mono">
+        <span className="text-[11.5px] font-bold uppercase tracking-wider text-accent font-mono">
           Next Up
         </span>
         <div className="flex items-center gap-2 text-xs text-tertiary">
-          <span className="pill font-mono">
+          <span className="pill font-mono font-medium">
             {activeBlock.startTime} – {activeBlock.endTime}
           </span>
           <span className="text-tertiary">·</span>
-          <span className="font-medium text-secondary">{getCategoryLabel(activeBlock)}</span>
+          <span className="font-semibold text-secondary">{getCategoryLabel(activeBlock)}</span>
         </div>
       </div>
 
@@ -163,19 +163,19 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
       {/* Minimal Timer Display */}
       <div className="bg-[#090a0f] p-4 rounded-md border border-subtle mb-5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-secondary font-medium">
+          <span className="text-xs text-secondary font-semibold">
             {isBreakMode ? 'Rest Break' : 'Focus Session'}
           </span>
-          <span className="text-xs text-tertiary font-mono">
+          <span className="text-xs text-secondary font-mono">
             {activeBlock.durationMinutes} min total
           </span>
         </div>
 
         <div className="flex items-baseline justify-between">
-          <div className="font-mono text-3xl sm:text-4xl font-semibold tracking-tight text-primary">
+          <div className="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-primary">
             {formatSecondsToTime(secondsRemaining)}
           </div>
-          <span className="text-xs text-tertiary font-mono">
+          <span className="text-xs text-secondary font-mono">
             {progressPercent}% elapsed
           </span>
         </div>
@@ -212,7 +212,7 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
 
         <button
           onClick={handleCompleteCurrent}
-          className="btn-secondary px-4 py-2.5 text-sm text-emerald-400 hover:text-emerald-300"
+          className="btn-secondary px-4 py-2.5 text-sm text-emerald-400 hover:text-emerald-300 font-semibold"
           title="Mark complete and proceed"
         >
           <Check className="w-4 h-4" />
@@ -221,10 +221,10 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
 
         <button
           onClick={handleStartBreak}
-          className="btn-ghost px-3 py-2.5 text-xs text-secondary"
+          className="btn-ghost px-3 py-2.5 text-xs text-secondary hover:text-primary font-medium"
           title="Take 5-minute movement break"
         >
-          <Coffee className="w-3.5 h-3.5" />
+          <Coffee className="w-4 h-4" />
           <span className="hidden sm:inline">5m Break</span>
         </button>
 
@@ -233,21 +233,21 @@ export const NextActionWidget: React.FC<NextActionWidgetProps> = ({
             setIsRunning(false);
             setSecondsRemaining(activeBlock.durationMinutes * 60);
           }}
-          className="btn-ghost px-2.5 py-2.5 text-tertiary hover:text-secondary"
+          className="btn-ghost px-2.5 py-2.5 text-secondary hover:text-primary"
           title="Reset timer"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
+          <RotateCcw className="w-4 h-4" />
         </button>
       </div>
 
       {/* Upcoming Action Preview */}
       {upcomingBlock && (
-        <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs text-tertiary">
+        <div className="mt-4 pt-3 border-t border-subtle flex items-center justify-between text-xs text-secondary">
           <div className="flex items-center gap-1.5 truncate pr-2">
-            <span className="text-secondary font-medium">Then:</span>
+            <span className="text-secondary font-semibold">Then:</span>
             <span className="truncate text-secondary">{upcomingBlock.title}</span>
           </div>
-          <span className="font-mono text-[11px] shrink-0">{upcomingBlock.startTime}</span>
+          <span className="font-mono text-[11.5px] text-tertiary shrink-0">{upcomingBlock.startTime}</span>
         </div>
       )}
     </div>

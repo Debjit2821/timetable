@@ -254,12 +254,23 @@ export const App: React.FC = () => {
     setProfile(updated);
   };
 
+  const handleResetProgress = () => {
+    StorageService.resetProgressToBeginning();
+    setProfile(StorageService.getProfile());
+    setSyllabus(StorageService.getSyllabus());
+    setDsaBank(StorageService.getDsaBank());
+    setCurrentDateStr(todayStr);
+    const freshPlan = PlannerEngine.getOrCreateDailyPlan(todayStr);
+    setCurrentPlan(freshPlan);
+  };
+
   const handleResetAllData = () => {
     StorageService.resetToDefault();
     setProfile(StorageService.getProfile());
     setSyllabus(StorageService.getSyllabus());
     setDsaBank(StorageService.getDsaBank());
     setSources(StorageService.getKnowledgeSources());
+    setCurrentDateStr(todayStr);
     setCurrentPlan(PlannerEngine.getOrCreateDailyPlan(todayStr));
   };
 
@@ -408,6 +419,7 @@ export const App: React.FC = () => {
           <SettingsView
             profile={profile}
             onUpdateProfile={handleUpdateProfile}
+            onResetProgress={handleResetProgress}
             onResetAllData={handleResetAllData}
           />
         )}

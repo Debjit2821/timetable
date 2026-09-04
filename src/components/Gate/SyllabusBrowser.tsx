@@ -93,7 +93,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
       {/* Search & Subject Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 text-tertiary absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-tertiary absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search topics or subtopics..."
@@ -106,7 +106,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
         <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button
             onClick={() => setSelectedSubjectId('all')}
-            className={`btn-ghost text-xs px-2.5 py-1 ${selectedSubjectId === 'all' ? 'bg-white/10 text-primary font-semibold' : 'text-tertiary'}`}
+            className={`btn-ghost text-xs px-2.5 py-1 ${selectedSubjectId === 'all' ? 'bg-white/10 text-primary font-semibold' : 'text-secondary'}`}
           >
             All (11)
           </button>
@@ -114,7 +114,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
             <button
               key={s.id}
               onClick={() => setSelectedSubjectId(s.id)}
-              className={`btn-ghost text-xs px-2.5 py-1 ${selectedSubjectId === s.id ? 'bg-white/10 text-primary font-semibold' : 'text-tertiary'}`}
+              className={`btn-ghost text-xs px-2.5 py-1 ${selectedSubjectId === s.id ? 'bg-white/10 text-primary font-semibold' : 'text-secondary'}`}
             >
               {s.code}
             </button>
@@ -137,15 +137,15 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                   <span className="pill font-mono font-semibold">
                     Section {subject.officialSectionNumber || subject.order}: {subject.code}
                   </span>
-                  <span className="text-sm font-semibold text-primary font-heading">
+                  <span className="text-sm font-bold text-primary font-heading">
                     {subject.name}
                   </span>
-                  <span className="text-xs text-tertiary">
+                  <span className="text-xs text-secondary">
                     · ~{subject.weightage}% marks
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs font-mono text-tertiary">
+                <div className="flex items-center gap-3 text-xs font-mono text-secondary">
                   <span>{subjectCompleted}/{subjectTotal} done</span>
                   <div className="w-16 h-1.5 progress-bar-bg hidden sm:block">
                     <div className="progress-bar-fill" style={{ width: `${subjectPercent}%` }} />
@@ -167,27 +167,27 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                           className="flex items-start gap-2.5 cursor-pointer flex-1"
                           onClick={() => toggleExpand(topic.id)}
                         >
-                          <button className="mt-0.5 text-tertiary hover:text-primary">
-                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          <button className="mt-0.5 text-secondary hover:text-primary">
+                            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </button>
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-sm font-medium ${isDone ? 'text-secondary' : 'text-primary'}`}>
+                              <span className={`text-sm font-semibold ${isDone ? 'text-secondary line-through' : 'text-primary'}`}>
                                 {topic.name}
                               </span>
-                              <span className="pill text-[10px]">{topic.importance}</span>
-                              <span className="text-[11px] text-tertiary font-mono">Diff: {topic.difficulty}/5</span>
+                              <span className="pill text-[11px] font-medium">{topic.importance}</span>
+                              <span className="text-[11.5px] text-tertiary font-mono">Diff: {topic.difficulty}/5</span>
                               {topic.revisionLevel > 0 && (
-                                <span className="pill pill-indigo text-[10px]">Rev #{topic.revisionLevel}</span>
+                                <span className="pill pill-indigo text-[11px] font-medium">Rev #{topic.revisionLevel}</span>
                               )}
                             </div>
 
-                            <div className="flex items-center gap-3 text-xs text-tertiary mt-0.5">
+                            <div className="flex items-center gap-3 text-xs text-secondary mt-0.5">
                               <span>{formatMinutesToHours(topic.estimatedMinutes)}</span>
                               <span>·</span>
                               <span>{studyTasks.length} study tasks</span>
                               <span>·</span>
-                              <span>PYQs: {topic.pyqSolved}/{topic.pyqTotal}</span>
+                              <span>PYQs: <strong className="text-primary font-medium">{topic.pyqSolved}/{topic.pyqTotal}</strong></span>
                             </div>
                           </div>
                         </div>
@@ -200,9 +200,9 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                               isDone ? 'not_started' : 'completed',
                               isDone ? 0 : topic.pyqTotal
                             )}
-                            className={`btn-ghost text-xs px-2.5 py-1 ${isDone ? 'text-emerald-400 bg-emerald-500/10' : 'text-secondary'}`}
+                            className={`btn-ghost text-xs px-2.5 py-1 font-medium ${isDone ? 'text-emerald-400 bg-emerald-500/15' : 'text-secondary'}`}
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-3.5 h-3.5" />
                             <span>{isDone ? 'Done' : 'Mark Done'}</span>
                           </button>
                         </div>
@@ -214,8 +214,8 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                           {/* 1. Faithful Official GATE 2027 Text */}
                           {topic.officialSyllabusText && (
                             <div className="p-3 rounded-md bg-[#090a0f] border border-subtle text-secondary">
-                              <div className="text-[11px] font-semibold text-accent uppercase font-mono mb-1 flex items-center gap-1.5">
-                                <BookOpen className="w-3 h-3" />
+                              <div className="text-[11.5px] font-bold text-accent uppercase font-mono mb-1 flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5" />
                                 <span>Official GATE 2027 Syllabus (Source: IIT Madras)</span>
                               </div>
                               <p className="text-secondary leading-relaxed font-normal">
@@ -226,14 +226,14 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
 
                           {/* 2. GatePlanner Structured Study Breakdown */}
                           <div>
-                            <div className="text-[11px] uppercase font-mono text-tertiary tracking-wider mb-1.5 flex items-center gap-1.5">
-                              <Layers className="w-3 h-3" />
+                            <div className="text-[11.5px] uppercase font-mono text-tertiary tracking-wider mb-1.5 flex items-center gap-1.5 font-semibold">
+                              <Layers className="w-3.5 h-3.5" />
                               <span>GatePlanner Study Breakdown (Learning Tasks):</span>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                               {studyTasks.map((st, i) => (
-                                <div key={i} className="flex items-center gap-1.5 text-secondary p-1 rounded bg-subtle">
-                                  <span className="w-1 h-1 rounded-full bg-accent" />
+                                <div key={i} className="flex items-center gap-1.5 text-secondary p-1.5 rounded bg-subtle">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
                                   <span>{st}</span>
                                 </div>
                               ))}

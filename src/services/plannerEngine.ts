@@ -485,12 +485,18 @@ export class PlannerEngine {
 
   /**
    * Intelligently selects high-yield topics for today's study across all 11 sections.
+   * Prioritizes in-progress topics with unfinished chapters so no topic is ever missed.
    */
   private static selectTopicsForDay(syllabus: Subject[], currentDay: number, totalDays: number): Topic[] {
     const allTopics = syllabus.flatMap(s => s.topics);
 
-    const inProgress = allTopics.filter(t => t.status === 'in_progress');
-    const notStarted = allTopics.filter(t => t.status === 'not_started');
+    // Topics that have pending incomplete chapters are top priority carryovers
+    const inProgress = allTopics.filter(
+      t => t.status === 'in_progress' || (t.completedTasks && t.completedTasks.length > 0 && t.status !== 'completed')
+    );
+    const notStarted = allTopics.filter(
+      t => t.status === 'not_started' && (!t.completedTasks || t.completedTasks.length === 0)
+    );
 
     notStarted.sort((a, b) => {
       const subA = syllabus.find(s => s.id === a.subjectId)?.weightage || 0;
@@ -501,8 +507,10 @@ export class PlannerEngine {
 
     const chosen: Topic[] = [];
 
-    if (inProgress.length > 0) {
-      chosen.push(inProgress[0]);
+    // Prioritize all in-progress / incomplete topics first so scheduler never misses them
+    for (const p of inProgress) {
+      if (chosen.length >= 3) break;
+      chosen.push(p);
     }
 
     for (const t of notStarted) {
@@ -517,6 +525,18 @@ export class PlannerEngine {
     }
 
     return chosen;
+  }
+
+  /**
+   * Helper to inspect pending vs completed chapters for a topic.
+   */
+  static getTopicChapterBreakdown(topic: Topic): { completed: string[]; remaining: string[]; total: number; percent: number } {
+    const allChapters = topic.studyBreakdown || topic.subtopics || [];
+    const completed = topic.completedTasks || [];
+    const remaining = allChapters.filter(c => !completed.includes(c));
+    const total = Math.max(allChapters.length, 1);
+    const percent = Math.min(Math.round((completed.length / total) * 100), 100);
+    return { completed, remaining, total, percent };
   }
 
   /**
@@ -545,6 +565,12 @@ export class PlannerEngine {
     if (targetTopics[0]) {
       const topic1GateId = `tb_gate_${targetTopics[0].id}`;
       const topic1PyqId = `tb_pyq_${targetTopics[0].id}`;
+      const t1Breakdown = this.getTopicChapterBreakdown(targetTopics[0]);
+      const isCarryover = t1Breakdown.completed.length > 0 && t1Breakdown.remaining.length > 0;
+      
+      const t1Subtitle = isCarryover
+        ? `Carryover chapters (${t1Breakdown.completed.length}/${t1Breakdown.total} done): ${t1Breakdown.remaining.slice(0, 2).join(', ')}`
+        : `Core Concept Mastery & Proofs (${t1Breakdown.remaining.slice(0, 2).join(', ') || 'Key Concepts'})`;
 
       if (!completedBlockIds.has(topic1GateId)) {
         dayStudyTasks.push({
@@ -552,7 +578,7 @@ export class PlannerEngine {
           startTime: '00:00',
           endTime: '00:00',
           title: `${targetTopics[0].subjectName} — ${targetTopics[0].name}`,
-          subtitle: `Core Concept Mastery & Key Proofs (${targetTopics[0].studyBreakdown ? targetTopics[0].studyBreakdown.slice(0, 2).join(', ') : 'Concepts'})`,
+          subtitle: t1Subtitle,
           category: 'gate',
           topicId: targetTopics[0].id,
           subjectId: targetTopics[0].subjectId,
@@ -569,7 +595,7 @@ export class PlannerEngine {
           startTime: '00:00',
           endTime: '00:00',
           title: `GATE PYQ Drill (2000-2025) — ${targetTopics[0].name}`,
-          subtitle: 'Solve verified historical GATE conceptual problems & trap analysis',
+          subtitle: `Solve verified historical GATE problems on ${targetTopics[0].name}`,
           category: 'gate',
           topicId: targetTopics[0].id,
           subjectId: targetTopics[0].subjectId,
@@ -600,13 +626,20 @@ export class PlannerEngine {
     // 4. Topic 2 In-Depth Problem Solving & Study
     if (targetTopics[1]) {
       const topic2GateId = `tb_gate_${targetTopics[1].id}`;
+      const t2Breakdown = this.getTopicChapterBreakdown(targetTopics[1]);
+      const isCarryover2 = t2Breakdown.completed.length > 0 && t2Breakdown.remaining.length > 0;
+      
+      const t2Subtitle = isCarryover2
+        ? `Pending chapters (${t2Breakdown.completed.length}/${t2Breakdown.total} done): ${t2Breakdown.remaining.slice(0, 2).join(', ')}`
+        : `In-depth concepts & problem solving (${t2Breakdown.remaining.slice(0, 2).join(', ') || 'Practice'})`;
+
       if (!completedBlockIds.has(topic2GateId)) {
         dayStudyTasks.push({
           id: topic2GateId,
           startTime: '00:00',
           endTime: '00:00',
           title: `${targetTopics[1].subjectName} — ${targetTopics[1].name}`,
-          subtitle: `In-depth concepts & problem solving`,
+          subtitle: t2Subtitle,
           category: 'gate',
           topicId: targetTopics[1].id,
           subjectId: targetTopics[1].subjectId,

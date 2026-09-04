@@ -40,7 +40,8 @@ export interface Topic {
   subjectName: string;
   name: string;
   officialSyllabusText: string; // Faithful official GATE 2027 syllabus entry
-  studyBreakdown: string[];     // GatePlanner structured study tasks
+  studyBreakdown: string[];     // GatePlanner structured study tasks / chapters
+  completedTasks?: string[];    // Ticked/completed chapters under this topic
   subtopics: string[];         // Backward compatibility
   estimatedMinutes: number;
   difficulty: 1 | 2 | 3 | 4 | 5; // 1 = Easy, 5 = Tough
@@ -182,6 +183,8 @@ export interface DailyPlan {
   dayStartTime?: string;
   outputMode?: 'maximum' | 'balanced' | 'accelerated';
   wakeUpProtocol?: WakeUpProtocol;
+  targetTopicIds?: string[];
+  completedChapterLogs?: { topicId: string; topicName: string; chapterName: string; date: string }[];
 }
 
 export interface KnowledgeSource {

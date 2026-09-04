@@ -123,6 +123,125 @@ export class StorageService {
     return updated;
   }
 
+  /**
+   * Ticks or un-ticks an individual chapter / subtopic task under a topic.
+   * Automatically updates topic completion status, completion %, and logs to daily plan.
+   */
+  static toggleTopicChapter(
+    topicId: string, 
+    chapterName: string, 
+    forcedState?: boolean,
+    dateStr?: string
+  ): { topic: Topic | null; syllabus: Subject[] } {
+    const syllabus = this.getSyllabus();
+    let updatedTopic: Topic | null = null;
+
+    const updatedSyllabus = syllabus.map(subject => ({
+      ...subject,
+      topics: subject.topics.map(topic => {
+        if (topic.id !== topicId) return topic;
+
+        const currentTasks = topic.completedTasks || [];
+        const isCurrentlyCompleted = currentTasks.includes(chapterName);
+        const shouldBeCompleted = forcedState !== undefined ? forcedState : !isCurrentlyCompleted;
+
+        let nextTasks: string[];
+        if (shouldBeCompleted) {
+          nextTasks = isCurrentlyCompleted ? currentTasks : [...currentTasks, chapterName];
+        } else {
+          nextTasks = currentTasks.filter(t => t !== chapterName);
+        }
+
+        const totalTasks = Math.max((topic.studyBreakdown || topic.subtopics || []).length, 1);
+        const newPercent = Math.min(Math.round((nextTasks.length / totalTasks) * 100), 100);
+
+        let newStatus: Topic['status'] = 'not_started';
+        if (nextTasks.length >= totalTasks) {
+          newStatus = 'completed';
+        } else if (nextTasks.length > 0) {
+          newStatus = 'in_progress';
+        }
+
+        const updated: Topic = {
+          ...topic,
+          completedTasks: nextTasks,
+          completionPercent: newPercent,
+          status: newStatus,
+          lastStudiedAt: shouldBeCompleted ? new Date().toISOString() : topic.lastStudiedAt
+        };
+
+        updatedTopic = updated;
+        return updated;
+      })
+    }));
+
+    this.saveSyllabus(updatedSyllabus);
+
+    // Also log in today's daily plan if available
+    const todayStr = dateStr || new Date().toISOString().split('T')[0];
+    const todayPlan = this.getDailyPlan(todayStr);
+    if (todayPlan && updatedTopic) {
+      const existingLogs = todayPlan.completedChapterLogs || [];
+      const topicObj = updatedTopic as Topic;
+      const isLogged = existingLogs.some(
+        l => l.topicId === topicId && l.chapterName === chapterName
+      );
+
+      let nextLogs = existingLogs;
+      if (topicObj.completedTasks?.includes(chapterName)) {
+        if (!isLogged) {
+          nextLogs = [...existingLogs, {
+            topicId,
+            topicName: topicObj.name,
+            chapterName,
+            date: todayStr
+          }];
+        }
+      } else {
+        nextLogs = existingLogs.filter(
+          l => !(l.topicId === topicId && l.chapterName === chapterName)
+        );
+      }
+
+      this.saveDailyPlan({
+        ...todayPlan,
+        completedChapterLogs: nextLogs
+      });
+    }
+
+    return { topic: updatedTopic, syllabus: updatedSyllabus };
+  }
+
+  /**
+   * Retrieves all topics that have started but have remaining incomplete chapters.
+   */
+  static getTopicsWithChaptersInProgress(): { topic: Topic; remainingChapters: string[]; completedChapters: string[] }[] {
+    const syllabus = this.getSyllabus();
+    const allTopics = syllabus.flatMap(s => s.topics);
+
+    return allTopics
+      .filter(t => t.status === 'in_progress' || (t.completedTasks && t.completedTasks.length > 0 && t.status !== 'completed'))
+      .map(topic => {
+        const allChapters = topic.studyBreakdown || topic.subtopics || [];
+        const completedChapters = topic.completedTasks || [];
+        const remainingChapters = allChapters.filter(c => !completedChapters.includes(c));
+        return {
+          topic,
+          remainingChapters,
+          completedChapters
+        };
+      })
+      .filter(item => item.remainingChapters.length > 0);
+  }
+
+  /**
+   * Retrieves all incomplete topics (in_progress or not_started).
+   */
+  static getIncompleteTopics(): Topic[] {
+    const syllabus = this.getSyllabus();
+    return syllabus.flatMap(s => s.topics).filter(t => t.status !== 'completed');
+  }
+
   // --- DSA BANK ---
   static getDsaBank(): DsaProblem[] {
     const raw = storageGet(STORAGE_KEYS.DSA_BANK);

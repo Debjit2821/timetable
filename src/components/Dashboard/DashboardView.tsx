@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { DailyPlan, UserProfile, Subject, DsaProblem, AdaptiveScheduleOptions } from '../../types';
 import { NextActionWidget } from '../NextActionWidget';
+import { TopicChapterTracker } from './TopicChapterTracker';
 import { DailyReviewModal } from './DailyReviewModal';
 import { RescheduleModal } from './RescheduleModal';
 import { CatchUpModal } from './CatchUpModal';
@@ -39,6 +40,7 @@ interface DashboardViewProps {
   dsaBank: DsaProblem[];
   onToggleTimeBlock: (blockId: string) => void;
   onDeleteTimeBlock: (blockId: string) => void;
+  onToggleChapter?: (topicId: string, chapterName: string) => void;
   onToggleHealthHabit: (habitKey: keyof DailyPlan['healthHabits']) => void;
   onAddWaterGlass: () => void;
   onRemoveWaterGlass: () => void;
@@ -56,6 +58,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   dsaBank,
   onToggleTimeBlock,
   onDeleteTimeBlock,
+  onToggleChapter,
   onToggleHealthHabit,
   onAddWaterGlass,
   onRemoveWaterGlass,
@@ -390,7 +393,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </section>
 
-      {/* 4. SUPPORTING SECTIONS (DSA + HEALTH + REVIEW) */}
+      {/* 4. CHAPTER COMPLETION & SYLLABUS TICK-OFF ENGINE */}
+      <section>
+        <TopicChapterTracker
+          syllabus={syllabus}
+          plan={plan}
+          onToggleChapter={onToggleChapter}
+        />
+      </section>
+
+      {/* 5. SUPPORTING SECTIONS (DSA + HEALTH + REVIEW) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
         {/* Left: Today's DSA Target */}
         <section className="space-y-3">
@@ -574,6 +586,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           profile={profile}
           healthScore={healthBreakdown.score}
           dsaSolvedCount={dsaSolvedToday}
+          syllabus={syllabus}
+          onToggleChapter={onToggleChapter}
           onClose={() => setShowReviewModal(false)}
           onPrepareTomorrow={() => {
             setShowReviewModal(false);

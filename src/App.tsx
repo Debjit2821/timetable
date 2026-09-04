@@ -182,6 +182,27 @@ export const App: React.FC = () => {
     setDsaBank(updatedBank);
   };
 
+  const handleToggleTopicChapter = (topicId: string, chapterName: string) => {
+    StorageService.toggleTopicChapter(topicId, chapterName, undefined, currentPlan.date);
+    const updatedSyllabus = StorageService.getSyllabus();
+    setSyllabus(updatedSyllabus);
+
+    // If the topic just reached 100% completion, schedule spaced repetition
+    const allTopics = updatedSyllabus.flatMap(s => s.topics);
+    const targetTopic = allTopics.find(t => t.id === topicId);
+    if (targetTopic && targetTopic.status === 'completed') {
+      RevisionEngine.scheduleSpacedRevisions(targetTopic, currentDateStr);
+      setSyllabus(StorageService.getSyllabus());
+    }
+
+    // Refresh daily plans in state
+    const updatedPlans = StorageService.getDailyPlans();
+    setDailyPlans(updatedPlans);
+    if (updatedPlans[currentPlan.date]) {
+      setCurrentPlan(updatedPlans[currentPlan.date]);
+    }
+  };
+
   const handleUpdateTopicStatus = (topicId: string, status: Topic['status'], pyqSolved?: number) => {
     const allTopics = syllabus.flatMap(s => s.topics);
     const targetTopic = allTopics.find(t => t.id === topicId);
@@ -348,6 +369,7 @@ export const App: React.FC = () => {
             dsaBank={dsaBank}
             onToggleTimeBlock={handleToggleTimeBlock}
             onDeleteTimeBlock={handleDeleteTimeBlock}
+            onToggleChapter={handleToggleTopicChapter}
             onToggleHealthHabit={handleToggleHealthHabit}
             onAddWaterGlass={handleAddWaterGlass}
             onRemoveWaterGlass={handleRemoveWaterGlass}
@@ -363,6 +385,7 @@ export const App: React.FC = () => {
           <SyllabusBrowser
             syllabus={syllabus}
             onUpdateTopicStatus={handleUpdateTopicStatus}
+            onToggleChapter={handleToggleTopicChapter}
           />
         )}
 

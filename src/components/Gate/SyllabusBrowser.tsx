@@ -18,11 +18,13 @@ import { formatMinutesToHours } from '../../utils/dateUtils';
 interface SyllabusBrowserProps {
   syllabus: Subject[];
   onUpdateTopicStatus: (topicId: string, status: Topic['status'], pyqSolved?: number) => void;
+  onToggleChapter?: (topicId: string, chapterName: string) => void;
 }
 
 export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
   syllabus,
-  onUpdateTopicStatus
+  onUpdateTopicStatus,
+  onToggleChapter
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('all');
@@ -159,6 +161,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                   const isDone = topic.status === 'completed';
                   const isExpanded = !!expandedTopics[topic.id];
                   const studyTasks = topic.studyBreakdown || topic.subtopics || [];
+                  const completedTasksList = topic.completedTasks || [];
 
                   return (
                     <div key={topic.id} className="p-3.5 hover:bg-white/[0.02] transition-colors">
@@ -180,12 +183,17 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                               {topic.revisionLevel > 0 && (
                                 <span className="pill pill-indigo text-[11px] font-medium">Rev #{topic.revisionLevel}</span>
                               )}
+                              {completedTasksList.length > 0 && !isDone && (
+                                <span className="pill pill-indigo text-[11px] font-mono font-medium">
+                                  {completedTasksList.length}/{studyTasks.length} chapters done
+                                </span>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-3 text-xs text-secondary mt-0.5">
                               <span>{formatMinutesToHours(topic.estimatedMinutes)}</span>
                               <span>·</span>
-                              <span>{studyTasks.length} study tasks</span>
+                              <span>{studyTasks.length} chapters</span>
                               <span>·</span>
                               <span>PYQs: <strong className="text-primary font-medium">{topic.pyqSolved}/{topic.pyqTotal}</strong></span>
                             </div>
@@ -203,7 +211,7 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                             className={`btn-ghost text-xs px-2.5 py-1 font-medium ${isDone ? 'text-emerald-400 bg-emerald-500/15' : 'text-secondary'}`}
                           >
                             <Check className="w-3.5 h-3.5" />
-                            <span>{isDone ? 'Done' : 'Mark Done'}</span>
+                            <span>{isDone ? 'Done' : 'Mark Topic Done'}</span>
                           </button>
                         </div>
                       </div>
@@ -224,19 +232,41 @@ export const SyllabusBrowser: React.FC<SyllabusBrowserProps> = ({
                             </div>
                           )}
 
-                          {/* 2. GatePlanner Structured Study Breakdown */}
+                          {/* 2. GatePlanner Structured Study Breakdown with Chapter Checkboxes */}
                           <div>
-                            <div className="text-[11.5px] uppercase font-mono text-tertiary tracking-wider mb-1.5 flex items-center gap-1.5 font-semibold">
-                              <Layers className="w-3.5 h-3.5" />
-                              <span>GatePlanner Study Breakdown (Learning Tasks):</span>
+                            <div className="text-[11.5px] uppercase font-mono text-tertiary tracking-wider mb-1.5 flex items-center justify-between font-semibold">
+                              <div className="flex items-center gap-1.5">
+                                <Layers className="w-3.5 h-3.5" />
+                                <span>Chapters & Learning Tasks (Click to tick completed):</span>
+                              </div>
+                              <span className="text-[11px] text-emerald-400 font-mono">
+                                {completedTasksList.length}/{studyTasks.length} Completed
+                              </span>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                              {studyTasks.map((st, i) => (
-                                <div key={i} className="flex items-center gap-1.5 text-secondary p-1.5 rounded bg-subtle">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
-                                  <span>{st}</span>
-                                </div>
-                              ))}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {studyTasks.map((st, i) => {
+                                const isChapterDone = completedTasksList.includes(st);
+
+                                return (
+                                  <label
+                                    key={i}
+                                    onClick={() => onToggleChapter && onToggleChapter(topic.id, st)}
+                                    className={`flex items-start gap-2.5 p-2 rounded-md border cursor-pointer transition-all ${
+                                      isChapterDone 
+                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+                                        : 'bg-subtle border-subtle text-secondary hover:text-primary hover:border-indigo-500/30'
+                                    }`}
+                                  >
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isChapterDone ? 'bg-emerald-500 border-emerald-500' : 'border-tertiary'}`}>
+                                      {isChapterDone && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={isChapterDone ? 'text-emerald-300/90 font-medium' : 'font-normal'}>
+                                      {st}
+                                    </span>
+                                  </label>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
